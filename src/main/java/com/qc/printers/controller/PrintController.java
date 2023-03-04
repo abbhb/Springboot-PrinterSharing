@@ -2,14 +2,17 @@ package com.qc.printers.controller;
 
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
+import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.websocket.server.PathParam;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
@@ -17,7 +20,7 @@ import java.util.UUID;
 import static com.qc.printers.common.MyString.public_file;
 
 @RestController//@ResponseBody+@Controller
-@RequestMapping("/print")
+@RequestMapping("/printer")
 @Slf4j
 public class PrintController {
 
@@ -28,9 +31,21 @@ public class PrintController {
         this.printService = printService;
     }
 
+    @CrossOrigin("*")
     @PostMapping("/uploadpdf")
     //后期可以传回token拿到用户信息
-    public R<String> fileupload(MultipartFile file) {
+    public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection) {
+        log.info("numberOfPrintedPages={},printingDirection={}",numberOfPrintedPages,printingDirection);
+
+        if (file==null){
+            return R.error("异常");
+        }
+        if (numberOfPrintedPages==null){
+            return R.error("参数呢");
+        }
+        if (printingDirection==null){
+            return R.error("参数呢");
+        }
         //首先要给文件找一个目录
         //先写返回值
         //再用pdf格式开始书写,先找原始的名字
@@ -62,7 +77,7 @@ public class PrintController {
             //存入库加入打印队列
             log.info("路径为:{}",folder+newName);
             //打印
-            boolean isPrintSuccess = printService.printsForPDF(newName);
+            boolean isPrintSuccess = printService.printsForPDF(newName,originName,numberOfPrintedPages,printingDirection);
             log.info("{}",isPrintSuccess);
             return R.success("打印中,请稍后!");
         } catch (IOException e) {

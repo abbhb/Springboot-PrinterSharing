@@ -21,7 +21,7 @@ public class PdfPrintUtil {
      * @param jobName  文件名
      * @param pageNum  页码
      */
-    public static void printFile(String fileUrl, String printService, String jobName,int pageNum) {
+    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection) {
         File file = new File(fileUrl);
         try {
             PDDocument document = PDDocument.load(file);
@@ -39,7 +39,10 @@ public class PdfPrintUtil {
             paper.setImageableArea(0, 0, paper.getWidth(), paper.getHeight()); // no margins
             PageFormat pageFormat = new PageFormat();
             pageFormat.setPaper(paper);
-            pageFormat.setOrientation(PageFormat.LANDSCAPE);// LANDSCAPE表示竖打;PORTRAIT表示横
+            if (printingDirection==null){
+                printingDirection = PageFormat.PORTRAIT;//默认竖着打
+            }
+            pageFormat.setOrientation(printingDirection);// LANDSCAPE表示竖打;PORTRAIT表示横
 
 
             //如果原本内容是横的就选Landscape，原内容为竖的就portrait
@@ -57,8 +60,12 @@ public class PdfPrintUtil {
 
             job.setPageable(book);
 
+
             //设置打印份数
-            job.setCopies(1);
+            if (numberOfPrintedPages==null){
+                numberOfPrintedPages = 1;
+            }
+            job.setCopies(numberOfPrintedPages);
             //调用isCancelled()方法获取打印状态,如果打印被取消,返回true,否则返回false。
             System.out.println("打印是否被取消："+job.isCancelled());
             job.print();
