@@ -21,4 +21,18 @@ public class Printer implements Serializable {
      * 0:PageFormat.LANDSCAPE
      */
     private Integer printingDirection;
+
+    /**
+     * 大小
+     实际大小 ACTUAL_SIZE,
+     *缩小     SHRINK_TO_FIT,
+     *拉伸     STRETCH_TO_FIT,
+     *适应     SCALE_TO_FIT;
+     */
+    private Integer printBigValue;
+
+    /**
+     * 需要解析那些页码，或者all
+     */
+    private String numberOfPrintedPagesIndex;
 }

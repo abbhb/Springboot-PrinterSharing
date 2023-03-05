@@ -88,6 +88,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+
         </dependency>
         <dependency>
             <groupId>com.auth0</groupId>
@@ -111,7 +112,21 @@
             <artifactId>itextpdf</artifactId>
             <version>5.5.13.1</version>
         </dependency>
+        <!--word依赖-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.6</version>
+        </dependency>
 
+        <!--添加本地的jacob.jar包-->
+        <dependency>
+            <groupId>com.jacob</groupId>
+            <artifactId>jacob</artifactId>
+            <version>1.20</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/jacob.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
@@ -120,6 +135,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>2.4.5</version>
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
     </build>

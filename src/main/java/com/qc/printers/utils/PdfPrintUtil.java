@@ -1,5 +1,6 @@
 package com.qc.printers.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
@@ -14,6 +15,7 @@ import java.awt.print.Paper;
 import java.awt.print.PrinterJob;
 import java.io.File;
 
+@Slf4j
 public class PdfPrintUtil {
     /**
      * @param fileUrl		文件地址
@@ -21,7 +23,7 @@ public class PdfPrintUtil {
      * @param jobName  文件名
      * @param pageNum  页码
      */
-    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection) {
+    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue) {
         File file = new File(fileUrl);
         try {
             PDDocument document = PDDocument.load(file);
@@ -53,7 +55,20 @@ public class PdfPrintUtil {
              *拉伸     STRETCH_TO_FIT,
              *适应     SCALE_TO_FIT;
              **/
-            PDFPrintable pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
+            PDFPrintable pdfPrintable = null;
+            if (printBigValue.equals(3)) {
+                pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
+            } else if (printBigValue.equals(2)) {
+                pdfPrintable = new PDFPrintable(document, Scaling.STRETCH_TO_FIT);
+            }else if (printBigValue.equals(1)) {
+                pdfPrintable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT);
+            }else if (printBigValue.equals(0)){
+                pdfPrintable = new PDFPrintable(document, Scaling.ACTUAL_SIZE);
+            }else {
+                //默认适应大小
+                pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
+            }
+
 
             // 页码
             book.append(pdfPrintable, pageFormat, pageNum);
@@ -66,6 +81,7 @@ public class PdfPrintUtil {
                 numberOfPrintedPages = 1;
             }
             job.setCopies(numberOfPrintedPages);
+            log.info("numberOfPrintedPages = {}",numberOfPrintedPages);
             //调用isCancelled()方法获取打印状态,如果打印被取消,返回true,否则返回false。
             System.out.println("打印是否被取消："+job.isCancelled());
             job.print();

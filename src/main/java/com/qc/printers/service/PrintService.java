@@ -5,5 +5,7 @@ import com.qc.printers.pojo.entity.Printer;
 
 public interface PrintService {
 
-    boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages,Integer printingDirection);
+    boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue,String numberOfPrintedPagesIndex);
+
+    boolean printsForWord(String newName, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex);
 }
