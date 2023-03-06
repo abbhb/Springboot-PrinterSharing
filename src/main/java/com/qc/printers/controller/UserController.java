@@ -50,7 +50,7 @@ public class UserController {
             }
             return userService.createUser(user,userId);
         }catch (Exception e){
-            return R.error("身份异常");
+            return userService.createUser(user,0L);
         }
 
 
