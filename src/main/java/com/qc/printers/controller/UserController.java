@@ -42,7 +42,13 @@ public class UserController {
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            return userService.createUser(user,Long.valueOf(id.asString()));
+            Long userId = 0L;
+            if (StringUtils.isEmpty(id.asString())){
+                userId = 0L;
+            }else {
+                userId = Long.valueOf(id.asString());
+            }
+            return userService.createUser(user,userId);
         }catch (Exception e){
             return R.error("身份异常");
         }
