@@ -1,9 +1,15 @@
 package com.qc.printers.controller;
 
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
+import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.UserService;
+import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +33,22 @@ public class UserController {
         String password = (String) user.get("password");
         return userService.login(username,password);
     }
+
+    @PostMapping("/create")
+    public R<String> create(@RequestBody User user,@RequestHeader(value="Authorization", defaultValue = "") String token){
+        System.out.println("user = " + user);
+//        String username = (String) user.get("username");
+//        String password = (String) user.get("password");
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            return userService.createUser(user,Long.valueOf(id.asString()));
+        }catch (Exception e){
+            return R.error("身份异常");
+        }
+
+
+    }
     @NeedToken
     @PostMapping("/logout")
     public R<UserResult> logout(@RequestHeader(value="Authorization", defaultValue = "") String token){
@@ -38,51 +60,122 @@ public class UserController {
         return userService.loginByToken(token);
     }
 
+    /**
+     * 后期加入权限过滤器
+     * @param pageNum
+     * @param pageSize
+     * @param name
+     * @param userId
+     * @return
+     */
     @NeedToken
-    @PostMapping("/updataemployeestatus")
-    public R<String> updataEmployeeStatus(@RequestHeader(value="Authorization", defaultValue = "") String token, @RequestBody Map<String, Object> employee){
-        String userId = (String) employee.get("userId");//因为雪花算法，所以ID来回传递使用字符串,传回Service前转会Long
-        String caozuoId = (String) employee.get("caozuoId");//操作人
-        String userStatus = (String) employee.get("userStatus");
-        return userService.updataUserStatus(userId,caozuoId,userStatus,token);
+    @GetMapping("/get")
+    public R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,@RequestHeader(value="userId", defaultValue = "") Long userId){
+        log.info("pageNum = {},pageSize = {},name = {},userId={}",pageNum,pageSize,name,userId);
+        return userService.getUserList(pageNum,pageSize,name,userId);
     }
 
+
     @NeedToken
-    @PostMapping("/updataforuser")
-    public R<UserResult> updataForUser(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> user){
-        System.out.println("user = " + user);
-        String id = (String) user.get("id");
-        String username = (String) user.get("username");
-        String name = (String) user.get("name");
-        String sex = (String) user.get("sex");
-        String idNumber = (String) user.get("idNumber");
-        String phone = (String) user.get("phone");
-        if (id==null){
-            return R.error("更新失败");
-        }
-        if (username==null){
-            return R.error("更新失败");
-        }
-        if (name==null){
-            return R.error("更新失败");
-        }
-        if (sex==null){
-            return R.error("更新失败");
-        }if (idNumber==null){
-            return R.error("更新失败");
-        }
-        if (phone==null){
-            return R.error("更新失败");
+    @DeleteMapping("/delete")
+    public R<String> deleteUsers(String id,@RequestHeader(value="Authorization", defaultValue = "") String token){
+        log.info("id = {}",id);
+        if (StringUtils.isEmpty(id)){
+            return R.error("无操作对象");
         }
         try {
-            return userService.updataForUser(Long.valueOf(id),username,name,sex,idNumber,phone,token);
-        }catch (Exception e){
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim uid = decodedJWT.getClaim("id");
+            Long userId = Long.valueOf(uid.asString());
+            if (userId==null){
+                return R.error("更新失败");
+            }
+            return userService.deleteUsers(id,userId);
+        }catch (Exception exception){
+            throw new CustomException("更新失败");
+        }
+
+    }
+
+    @NeedToken
+    @PutMapping("/updatauserstatus")
+    public R<String> updataUserStatus(@RequestHeader(value="Authorization", defaultValue = "") String token, @RequestBody Map<String,Object> user){
+        if (StringUtils.isEmpty((String) user.get("id"))){
+            return R.error("无操作对象");
+        }
+        if (StringUtils.isEmpty((String) user.get("status"))){
+            return R.error("无操作对象");
+        }
+        if (StringUtils.isEmpty(token)){
+            return R.error("无操作对象");
+        }
+
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            Long userId = Long.valueOf(id.asString());
+            if (userId==null){
+                return R.error("更新失败");
+            }
+            return userService.updataUserStatus((String) user.get("id"),(String) user.get("status"),userId);
+        }catch (Exception exception){
+            throw new CustomException("更新失败");
+        }
+
+    }
+
+    /**
+     * 更新操作
+     * @param token
+     * @param user
+     * @return
+     */
+    @NeedToken
+    @PutMapping("/updataforuser")
+    public R<UserResult> updataForUser(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody User user){
+        log.info("user = {}", user);
+
+        if (user.getId()==null){
             return R.error("更新失败");
         }
+        if (user.getUsername()==null){
+            return R.error("更新失败");
+        }
+        if (user.getName()==null){
+            return R.error("更新失败");
+        }
+        if (user.getSex()==null){
+            return R.error("更新失败");
+        }if (user.getIdNumber()==null){
+            return R.error("更新失败");
+        }
+        if (user.getPhone()==null){
+            return R.error("更新失败");
+        }
+        if (user.getStatus()==null){
+            return R.error("更新失败");
+        }
+        if (user.getPermission()==null){
+            return R.error("更新失败");
+        }
+
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            Long userId = Long.valueOf(id.asString());
+            if (userId==null){
+                return R.error("更新失败");
+            }
+            return userService.updataForUser(user,userId);
+        }catch (Exception exception){
+            throw new CustomException("更新失败");
+        }
+
     }
 
 
-    @PostMapping("/changepassword")
+    @NeedToken
+    @PutMapping("/changepassword")
     public R<UserResult> changePassword(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> user){
         System.out.println("user = " + user);
         String id = (String) user.get("id");
@@ -90,7 +183,7 @@ public class UserController {
         String password = (String) user.get("password");
         String newpassword = (String) user.get("newpassword");
         String checknewpassword = (String) user.get("checknewpassword");
-        return userService.changePassword(id,username,password,newpassword,checknewpassword,token);
+        return userService.changePassword(id,username,password,newpassword,checknewpassword);
     }
 
     @NeedToken

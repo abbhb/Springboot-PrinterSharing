@@ -35,7 +35,7 @@ public class UserResult implements Serializable {
     private LocalDateTime updateTime;
 
     //分组
-    private Integer grouping;
+    private Integer permission;
 
     private String token;
 

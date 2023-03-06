@@ -1,16 +1,16 @@
 package com.qc.printers.controller;
 
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
+import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.websocket.server.PathParam;
@@ -35,7 +35,7 @@ public class PrintController {
     @CrossOrigin("*")
     @PostMapping("/uploadpdf")
     //后期可以传回token拿到用户信息
-    public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex) {
+    public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
         log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={}",numberOfPrintedPages,printingDirection,numberOfPrintedPagesIndex,printBigValue);
 
         if (file==null){
@@ -53,7 +53,18 @@ public class PrintController {
         if (StringUtils.isEmpty(numberOfPrintedPagesIndex)){
             numberOfPrintedPagesIndex = "all";//给默认,默认全部打印
         }
-
+        Long userId = 0L;
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            if (StringUtils.isEmpty(id.asString())){
+                userId = 0L;
+            }else {
+                userId = Long.valueOf(id.asString());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         //首先要给文件找一个目录
         //先写返回值
         //再用pdf格式开始书写,先找原始的名字
@@ -87,14 +98,14 @@ public class PrintController {
             log.info("路径为:{}",folder+newName);
             //打印
             if (suffix.equals("pdf")){
-                boolean isPrintSuccess = printService.printsForPDF(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex);
+                boolean isPrintSuccess = printService.printsForPDF(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,userId);
 //                log.info("{}",isPrintSuccess);
                 if (isPrintSuccess){
                     return R.success("打印成功,请稍后!");
                 }
                 return R.error("打印失败");
             } else if (suffix.equals("docx")) {
-                boolean isPrintSuccess = printService.printsForWord(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex);
+                boolean isPrintSuccess = printService.printsForWord(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,userId);
                 if (isPrintSuccess){
                     return R.success("打印成功,请稍后!");
                 }

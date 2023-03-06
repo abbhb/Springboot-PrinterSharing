@@ -25,6 +25,9 @@ public class User implements Serializable {
 
     private String password;
 
+    /**
+     * 盐
+     */
     private String salt;
 
     private String phone;
@@ -46,6 +49,6 @@ public class User implements Serializable {
 
 
     //分组
-    private Integer grouping;
+    private Integer permission;
 //    private Long role;//权限更改为角色，再去查询角色所有的权限
 }
