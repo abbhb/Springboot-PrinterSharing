@@ -45,8 +45,21 @@ public class GlobalExceptionHandler {
      * TODO  那么你还可以自己写多个不同的 exceptionHandler 处理不同异常
      */
     @ExceptionHandler(RuntimeException.class)
-    public R<String> runtimeExceptionHandler(RuntimeException e) {
-        log.error(e.getMessage(),e.getClass());
+    public R<String> runtimeExceptionHandler(Exception e) {
+        if (e.getCause() instanceof SQLIntegrityConstraintViolationException){
+//            if(e.getMessage().contains("Duplicate entry")){//设置过约束，某个值唯一的话
+//                String[] split = e.getMessage().split(" ");
+//
+//                String msg = split[2] + "已存在";
+//                log.info("{}",split);
+//                return R.error(msg);
+//            }
+
+            return R.error("请注意,用户名等数据不能重复");
+        } else if (e.getCause() instanceof RuntimeException) {
+            log.error(e.getMessage(),e.getClass());
+            return R.error("运行异常");
+        }
         return R.error("运行异常");
     }
 

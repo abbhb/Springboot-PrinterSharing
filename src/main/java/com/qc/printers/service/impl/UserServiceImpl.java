@@ -85,6 +85,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(user.getPassword())){
             throw new CustomException("password");
         }
+        if (!user.getPassword().matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
+            return R.error("密码必须字母加数字,8-16位");
+        }
 
         if (user.getPermission().equals(1)){
             User byId = super.getById(userId);
@@ -211,7 +214,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (byId==null){
             throw new CustomException("id");
         }
-        if (!byId.getPermission().equals(1)){
+        if (!byId.getPermission().equals(user.getPermission())){
             throw new CustomException("getPermission");
         }
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();

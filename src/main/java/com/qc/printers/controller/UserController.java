@@ -1,5 +1,6 @@
 package com.qc.printers.controller;
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.CustomException;
@@ -49,7 +50,11 @@ public class UserController {
                 userId = Long.valueOf(id.asString());
             }
             return userService.createUser(user,userId);
-        }catch (Exception e){
+        }catch (JWTDecodeException e){
+            //禁止管理员注册
+            return userService.createUser(user,0L);
+        }catch (NullPointerException n){
+            //禁止管理员注册
             return userService.createUser(user,0L);
         }
 
