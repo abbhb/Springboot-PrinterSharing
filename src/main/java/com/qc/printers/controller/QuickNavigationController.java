@@ -2,17 +2,22 @@ package com.qc.printers.controller;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.Code;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.pojo.QuickNavigationCategorizeResult;
 import com.qc.printers.pojo.QuickNavigationResult;
+import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.QuickNavigationCategorize;
 import com.qc.printers.service.QuickNavigationCategorizeService;
-import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;
 import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.websocket.server.PathParam;
 import java.util.List;
 
 
@@ -22,10 +27,12 @@ import java.util.List;
 public class QuickNavigationController {
 
 
+    private final QuickNavigationCategorizeService quickNavigationCategorizeService;
     private final QuickNavigationService quickNavigationService;
 
     @Autowired
-    public QuickNavigationController(QuickNavigationService quickNavigationService) {
+    public QuickNavigationController(QuickNavigationCategorizeService quickNavigationCategorizeService, QuickNavigationService quickNavigationService) {
+        this.quickNavigationCategorizeService = quickNavigationCategorizeService;
         this.quickNavigationService = quickNavigationService;
     }
 
@@ -39,12 +46,50 @@ public class QuickNavigationController {
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            Long userId = Long.valueOf(id.asString());
-            return quickNavigationService.list(userId);
+            Long quickNavigationId = Long.valueOf(id.asString());
+            return quickNavigationService.list(quickNavigationId);
         }catch (Exception e){
             log.error(e.getMessage());
             return R.error(Code.DEL_TOKEN,"未登录");
         }
 
     }
+
+    /**
+     * 管理系统
+     * @return
+     */
+    @NeedToken
+    @GetMapping("/listadmin")
+    //后期可以传回token拿到用户信息
+    public R<PageData<QuickNavigationCategorizeResult>> listAdmin(Integer pageNum, Integer pageSize, String name) {
+        return quickNavigationCategorizeService.listAdmin(pageNum,pageSize,name);
+
+    }
+
+
+    @NeedToken
+    @PutMapping("/updataforquicknavigationcategorize")
+    public R<String> updataForQuickNavigationCategorize(@RequestBody QuickNavigationCategorize quickNavigation){
+
+        if (StringUtils.isEmpty(quickNavigation.getName())){
+            return R.error("更新失败");
+        }
+        if (quickNavigation.getId()==null){
+            return R.error("更新失败");
+        }
+        return quickNavigationCategorizeService.updataForQuickNavigationCategorize(quickNavigation);
+    }
+
+    @NeedToken
+    @DeleteMapping("/delete")
+    public R<String> deleteNavigationCategorize(String id){
+        log.info("id = {}",id);
+        if (StringUtils.isEmpty(id)){
+            return R.error("无操作对象");
+        }
+        return quickNavigationCategorizeService.deleteNavigationCategorize(id);
+
+    }
+
 }
