@@ -69,7 +69,7 @@ public class PrintController {
         //先写返回值
         //再用pdf格式开始书写,先找原始的名字
         String originName = file.getOriginalFilename();
-        String suffix = StringUtils.substringAfter(originName , ".");
+        String suffix = StringUtils.substringAfterLast(originName , ".");
         //判断文件类型是不是pdf
         if((!suffix.equals("pdf"))&&(!suffix.equals("docx"))){
             //如果不是的话，就返回类型
