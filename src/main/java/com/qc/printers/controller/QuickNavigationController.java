@@ -56,11 +56,11 @@ public class QuickNavigationController {
     }
 
     /**
-     * 管理系统
+     * 导航分类管理系统
      * @return
      */
     @NeedToken
-    @GetMapping("/listadmin")
+    @GetMapping("/listnavfenlei")
     //后期可以传回token拿到用户信息
     public R<PageData<QuickNavigationCategorizeResult>> listAdmin(Integer pageNum, Integer pageSize, String name) {
         return quickNavigationCategorizeService.listAdmin(pageNum,pageSize,name);
