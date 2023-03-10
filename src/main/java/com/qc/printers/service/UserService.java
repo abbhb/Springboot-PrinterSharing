@@ -26,4 +26,6 @@ public interface UserService extends IService<User> {
     R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,Long userId);
 
     R<String> deleteUsers(String id,Long userId);
+
+    R<String> hasUserName(String username);
 }

@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static com.qc.printers.utils.paramsCalibration.checkSensitiveWords;
+
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -66,7 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
         iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),one.getIdNumber(),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
         return R.success(UserResult);
     }
 
@@ -79,6 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(user.getName())){
             throw new CustomException("yichang");
         }
+
         if (StringUtils.isEmpty(user.getUsername())){
             throw new CustomException("yichang");
         }
@@ -95,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.error("权限不足");
             }
         }
-
+        checkSensitiveWords(user.getName());
         String password = user.getPassword();
         String salt = PWDMD5.getSalt();
         String md5Encryption = PWDMD5.getMD5Encryption(password,salt);
@@ -135,7 +138,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (one==null){
             return R.error("err");
         }
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),one.getIdNumber(),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
         return R.success(UserResult);
     }
 
@@ -195,7 +198,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (user.getSex()==null){
             return R.error("更新失败");
-        }if (user.getIdNumber()==null){
+        }if (user.getStudentId()==null){
             return R.error("更新失败");
         }
         if (user.getPhone()==null){
@@ -204,8 +207,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId==null){
             return R.error("更新失败");
         }
-        if (user.getIdNumber().length()!=18){
-            return R.error("18");
+        if (user.getStudentId()>999999999999L){
+            return R.error("不能超过12位学号");
         }
         if (user.getId().equals(1L)){
             return R.error("禁止操作admin");
@@ -220,7 +223,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId,user.getId());
         lambdaUpdateWrapper.set(User::getName,user.getName());
-        lambdaUpdateWrapper.set(User::getIdNumber,user.getIdNumber());
+        lambdaUpdateWrapper.set(User::getStudentId,user.getStudentId());
         lambdaUpdateWrapper.set(User::getUsername,user.getUsername());
         lambdaUpdateWrapper.set(User::getSex,user.getSex());
         lambdaUpdateWrapper.set(User::getPermission,user.getPermission());
@@ -321,7 +324,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
            
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),user1.getIdNumber(),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),null);
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),null);
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -369,5 +372,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return R.success("删除成功");
+    }
+
+    @Override
+    public R<String> hasUserName(String username) {
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUsername,username);
+        int count = super.count(userLambdaQueryWrapper);
+        if (count==0){
+            return R.success("可用");
+        }
+        return R.error("请换一个用户名试试!");
+
     }
 }

@@ -87,6 +87,16 @@ public class UserController {
     }
 
 
+    /**
+     * 此接口需要加密
+     * @param username
+     * @return
+     */
+    @GetMapping("/hasUserName")
+    public R<String> hasUserName(String username){
+        return userService.hasUserName(username);
+    }
+
     @NeedToken
     @DeleteMapping("/delete")
     public R<String> deleteUsers(String id,@RequestHeader(value="Authorization", defaultValue = "") String token){
@@ -157,7 +167,7 @@ public class UserController {
         }
         if (user.getSex()==null){
             return R.error("更新失败");
-        }if (user.getIdNumber()==null){
+        }if (user.getStudentId()==null){
             return R.error("更新失败");
         }
         if (user.getPhone()==null){

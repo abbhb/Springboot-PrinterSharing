@@ -26,7 +26,7 @@ public class UserResult implements Serializable {
 
     private String sex;
 
-    private String idNumber;
+    private String studentId;
 
     private Integer status;
 

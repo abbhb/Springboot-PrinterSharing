@@ -34,7 +34,8 @@ public class User implements Serializable {
 
     private String sex;
 
-    private String idNumber;
+    //学号
+    private Long studentId;
 
     private Integer status;
     @TableField(fill = FieldFill.INSERT)//只在插入时填充
