@@ -12,4 +12,8 @@ public class QuickNavigationItemResult {
     private List<Integer> permission;
     private String image;
     private String introduction;
+
+    private String categorizeId;
+
+    private String categorizeName;
 }

@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.QuickNavigationCategorizeMapper;
 import com.qc.printers.pojo.QuickNavigationCategorizeResult;
+
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.QuickNavigationCategorize;
-import com.qc.printers.pojo.entity.QuickNavigationItem;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +24,10 @@ import java.util.List;
 @Service
 @Slf4j
 public class QuickNavigationCategorizeServiceImpl extends ServiceImpl<QuickNavigationCategorizeMapper, QuickNavigationCategorize> implements QuickNavigationCategorizeService {
-
-    private final QuickNavigationItemService quickNavigationItemService;
-
     @Autowired
-    public QuickNavigationCategorizeServiceImpl(QuickNavigationItemService quickNavigationItemService) {
-        this.quickNavigationItemService = quickNavigationItemService;
-    }
+    private QuickNavigationItemService quickNavigationItemService;
+
+
 
     /**
      * 后期通过注解controller校验权限
@@ -38,7 +35,7 @@ public class QuickNavigationCategorizeServiceImpl extends ServiceImpl<QuickNavig
      * @return
      */
     @Override
-    public R<PageData<QuickNavigationCategorizeResult>> listAdmin(Integer pageNum, Integer pageSize, String name) {
+    public R<PageData<QuickNavigationCategorizeResult>> listNavFenLei(Integer pageNum, Integer pageSize, String name) {
         if (pageNum==null){
             return R.error("传参错误");
         }
@@ -122,4 +119,6 @@ public class QuickNavigationCategorizeServiceImpl extends ServiceImpl<QuickNavig
 
         return R.success("删除成功");
     }
+
+
 }

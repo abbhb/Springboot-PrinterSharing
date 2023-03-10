@@ -60,6 +60,7 @@ public class GlobalExceptionHandler {
             log.error(e.getMessage(),e.getClass());
             return R.error("运行异常");
         }
+        e.printStackTrace();
         return R.error("运行异常");
     }
 
