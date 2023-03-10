@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
+import static com.qc.printers.utils.paramsCalibration.checkBeforePrint;
 
 @Service
 @Slf4j
@@ -90,18 +91,5 @@ public class PrintServiceImpl implements PrintService {
         }
     }
     
-    private void checkBeforePrint(Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex) {
-        if (numberOfPrintedPages == null) {
-            throw new CustomException("err: numberOfPrintedPages is null");
-        }
-        if (printingDirection == null) {
-            throw new CustomException("err: printingDirection is null");
-        }
-        if (printBigValue == null) {
-            throw new CustomException("err: printBigValue is null");
-        }
-        if (numberOfPrintedPagesIndex == null) {
-            throw new CustomException("err: numberOfPrintedPagesIndex is null");
-        }
-    }
+
 }
