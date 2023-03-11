@@ -75,6 +75,11 @@
             <version>1.1.23</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>7.1.0</version>
+        </dependency>
 
         <!-- 引入 redis 依赖 -->
         <dependency>

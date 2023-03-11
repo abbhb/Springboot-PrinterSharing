@@ -1,6 +1,7 @@
 package com.qc.printers.service.impl;
 
 
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.QuickNavigationItemResult;
 import com.qc.printers.pojo.QuickNavigationResult;
@@ -58,6 +59,13 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setPath(quickNavigationItem.getPath());
                 quickNavigationItemResult.setImage(quickNavigationItem.getImage());
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
+                quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
+                QuickNavigationCategorize quickNavigationCategorizeServiceById = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
+                log.info("quickNavigationCategorizeServiceById = {}",quickNavigationCategorizeServiceById);
+                if (quickNavigationCategorizeServiceById==null){
+                    throw new CustomException("运行异常");
+                }
+                quickNavigationItemResult.setCategorizeName(quickNavigationCategorizeServiceById.getName());
                 String permission = quickNavigationItem.getPermission();
                 if (permission.contains(",")){
                     List<Integer> integerList = new ArrayList<>();

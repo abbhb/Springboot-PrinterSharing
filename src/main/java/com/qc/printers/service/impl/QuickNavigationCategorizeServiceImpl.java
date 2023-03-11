@@ -4,18 +4,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.QuickNavigationCategorizeMapper;
 import com.qc.printers.pojo.QuickNavigationCategorizeResult;
 
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.QuickNavigationCategorize;
+import com.qc.printers.pojo.selectOptionsResult;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,15 +101,18 @@ public class QuickNavigationCategorizeServiceImpl extends ServiceImpl<QuickNavig
         if (StringUtils.isEmpty(id)){
             return R.error("无操作对象");
         }
-        Collection<Long> ids = new ArrayList<>();
         if (id.contains(",")){
             String[] split = id.split(",");
             for (String s:
                     split) {
 
-                ids.add(Long.valueOf(s));
+                if (quickNavigationItemService.hasId(Long.valueOf(s))){
+                    return R.error("该分类绑定了item,请先删除这些item");
+                }
+                LambdaQueryWrapper<QuickNavigationCategorize> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
+                lambdaUpdateWrapper.eq(QuickNavigationCategorize::getId,Long.valueOf(s));
+                super.remove(lambdaUpdateWrapper);
             }
-            super.removeByIds(ids);
         }else {
 
            if (quickNavigationItemService.hasId(Long.valueOf(id))){
@@ -118,6 +124,35 @@ public class QuickNavigationCategorizeServiceImpl extends ServiceImpl<QuickNavig
         }
 
         return R.success("删除成功");
+    }
+
+    @Override
+    public R<List<selectOptionsResult>> getCategorizeSelectOptionsList() {
+        List<QuickNavigationCategorize> list = super.list();
+        List<selectOptionsResult> selectOptionsResults = new ArrayList<>();
+        for (QuickNavigationCategorize q:
+                list) {
+            selectOptionsResult selectOptionsResult = new selectOptionsResult();
+            selectOptionsResult.setLabel(q.getName());
+            selectOptionsResult.setValue(String.valueOf(q.getId()));
+            selectOptionsResults.add(selectOptionsResult);
+        }
+        return R.success(selectOptionsResults);
+    }
+
+    @Transactional
+    @Override
+    public R<String> createNavCategorize(QuickNavigationCategorize quickNavigationCategorize) {
+        if (StringUtils.isEmpty(quickNavigationCategorize.getName())){
+            throw  new CustomException("必参缺失");
+        }
+        quickNavigationCategorize.setId(null);
+        quickNavigationCategorize.setIsDeleted(null);
+        boolean save = super.save(quickNavigationCategorize);
+        if (save){
+            return R.success("成功");
+        }
+        return R.error("失败");
     }
 
 

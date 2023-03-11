@@ -17,8 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -52,38 +54,38 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         if (pageSize==null){
             return R.error("传参错误");
         }
-        Page<QuickNavigationItem> pageInfo = new Page(pageNum,pageSize);
+        Page<QuickNavigationItem> pageInfo = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<QuickNavigationItem> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(!StringUtils.isEmpty(name),QuickNavigationItem::getName,name);
         super.page(pageInfo,lambdaQueryWrapper);
 
+        log.info("pageInfo = {}",pageInfo);
 
         PageData<QuickNavigationItemResult> pageData = new PageData<>();
         List<QuickNavigationItemResult> results = new ArrayList<>();
-        for (Object quickNavigationItem : pageInfo.getRecords()) {
-            QuickNavigationItem quickNavigationItem1 = (QuickNavigationItem) quickNavigationItem;
+        for (QuickNavigationItem quickNavigationItem : pageInfo.getRecords()) {
 
+            log.info("quickNavigationItem = {}",quickNavigationItem);
             QuickNavigationItemResult quickNavigationItemResult = new QuickNavigationItemResult();
-            quickNavigationItemResult.setName(quickNavigationItem1.getName());
-            quickNavigationItemResult.setId(String.valueOf(quickNavigationItem1.getId()));
-            quickNavigationItemResult.setIntroduction(quickNavigationItem1.getIntroduction());
-            quickNavigationItemResult.setPath(quickNavigationItem1.getPath());
-            quickNavigationItemResult.setImage(quickNavigationItem1.getImage());
-            String[] split = quickNavigationItem1.getPermission().split(",");
+            quickNavigationItemResult.setName(quickNavigationItem.getName());
+            quickNavigationItemResult.setId(String.valueOf(quickNavigationItem.getId()));
+            quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
+            quickNavigationItemResult.setPath(quickNavigationItem.getPath());
+            quickNavigationItemResult.setImage(quickNavigationItem.getImage());
+            String[] split = quickNavigationItem.getPermission().split(",");
             List<Integer> list = new ArrayList<>();
             for (String s:
                     split) {
                 list.add(Integer.valueOf(s));
             }
             quickNavigationItemResult.setPermission(list);
-            quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem1.getCategorizeId()));
+            quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
 
 
             /*
             * 后期这种简单粗暴可以优化成map里找
             * */
-            log.info("quickNavigationCategorizeService = {}",quickNavigationCategorizeService);
-            QuickNavigationCategorize quickNavigationCategorize = quickNavigationCategorizeService.getById(quickNavigationItem1.getCategorizeId());
+            QuickNavigationCategorize quickNavigationCategorize = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
             log.info("quickNavigationCategorize = {}",quickNavigationCategorize);
             if (quickNavigationCategorize==null){
                 throw new CustomException("运行异常");
@@ -99,5 +101,56 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         pageData.setRecords(results);
         pageData.setMaxLimit(pageInfo.getMaxLimit());
         return R.success(pageData);
+    }
+
+    @Transactional
+    @Override
+    public R<String> createNavItem(QuickNavigationItem quickNavigationItem) {
+        if(StringUtils.isEmpty(quickNavigationItem.getName())){
+            throw new CustomException("必参缺少");
+        }
+        if(StringUtils.isEmpty(quickNavigationItem.getPath())){
+            throw new CustomException("必参缺少");
+        }
+        if(quickNavigationItem.getCategorizeId()==null){
+            throw new CustomException("必参缺少");
+        }
+        if(StringUtils.isEmpty(quickNavigationItem.getPermission())){
+            throw new CustomException("必参缺少");
+        }
+
+        //权限存入数据库必须改逗号分隔格式
+        if (quickNavigationItem.getPermission().equals("2")){
+            quickNavigationItem.setPermission("1,2");
+        }
+        boolean save = super.save(quickNavigationItem);
+        if (save){
+            return R.success("添加成功");
+        }
+        return R.error("添加失败");
+    }
+
+    @Override
+    public R<String> deleteNavigationItem(String id) {
+        if (StringUtils.isEmpty(id)){
+            return R.error("无操作对象");
+        }
+        Collection<Long> ids = new ArrayList<>();
+        if (id.contains(",")){
+            String[] split = id.split(",");
+            for (String s:
+                    split) {
+
+                ids.add(Long.valueOf(s));
+            }
+            super.removeByIds(ids);
+        }else {
+
+            LambdaQueryWrapper<QuickNavigationItem> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
+            lambdaUpdateWrapper.eq(QuickNavigationItem::getId,Long.valueOf(id));
+            super.remove(lambdaUpdateWrapper);
+        }
+
+        return R.success("删除成功");
     }
 }

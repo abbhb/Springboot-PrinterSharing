@@ -6,6 +6,7 @@ import com.qc.printers.pojo.QuickNavigationCategorizeResult;
 import com.qc.printers.pojo.QuickNavigationItemResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.QuickNavigationCategorize;
+import com.qc.printers.pojo.selectOptionsResult;
 
 import java.util.List;
 
@@ -17,4 +18,7 @@ public interface QuickNavigationCategorizeService extends IService<QuickNavigati
     R<String> deleteNavigationCategorize(String id);
 
 
+    R<List<selectOptionsResult>> getCategorizeSelectOptionsList();
+
+    R<String> createNavCategorize(QuickNavigationCategorize quickNavigationCategorize);
 }

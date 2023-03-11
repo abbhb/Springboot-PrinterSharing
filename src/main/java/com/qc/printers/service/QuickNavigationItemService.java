@@ -10,4 +10,8 @@ public interface QuickNavigationItemService extends IService<QuickNavigationItem
     boolean hasId(Long valueOf);
 
     R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name);
+
+    R<String> createNavItem(QuickNavigationItem quickNavigationItem);
+
+    R<String> deleteNavigationItem(String id);
 }

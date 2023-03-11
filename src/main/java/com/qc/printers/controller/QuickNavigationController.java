@@ -9,6 +9,8 @@ import com.qc.printers.pojo.QuickNavigationItemResult;
 import com.qc.printers.pojo.QuickNavigationResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.QuickNavigationCategorize;
+import com.qc.printers.pojo.entity.QuickNavigationItem;
+import com.qc.printers.pojo.selectOptionsResult;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;
@@ -70,6 +72,31 @@ public class QuickNavigationController {
     }
 
     /**
+     * 权限等用注解后期实现,通过过滤器
+     * @param quickNavigationItem
+     * @return
+     */
+    @PostMapping("/createItem")
+    public R<String> createItem(@RequestBody QuickNavigationItem quickNavigationItem){
+        System.out.println("quickNavigationItem = " + quickNavigationItem);
+
+        return quickNavigationItemService.createNavItem(quickNavigationItem);
+
+    }
+    /**
+     * 权限等用注解后期实现,通过过滤器
+     * @param quickNavigationCategorize
+     * @return
+     */
+    @PostMapping("/createCategorize")
+    public R<String> createCategorize(@RequestBody QuickNavigationCategorize quickNavigationCategorize){
+        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
+
+        return quickNavigationCategorizeService.createNavCategorize(quickNavigationCategorize);
+
+    }
+
+    /**
      * 导航分类管理系统
      * @return
      */
@@ -81,6 +108,16 @@ public class QuickNavigationController {
         return quickNavigationItemService.listNavFenLeiItem(pageNum,pageSize,name);
 
     }
+
+    @NeedToken
+    @GetMapping("/getCategorizeSelectOptionsList")
+    //后期可以传回token拿到用户信息
+    public R<List<selectOptionsResult>> getCategorizeSelectOptionsList() {
+        return quickNavigationCategorizeService.getCategorizeSelectOptionsList();
+
+    }
+
+
 
     @NeedToken
     @PutMapping("/updataforquicknavigationcategorize")
@@ -96,13 +133,23 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @DeleteMapping("/delete")
+    @DeleteMapping("/deleteCategorize")
     public R<String> deleteNavigationCategorize(String id){
         log.info("id = {}",id);
         if (StringUtils.isEmpty(id)){
             return R.error("无操作对象");
         }
         return quickNavigationCategorizeService.deleteNavigationCategorize(id);
+
+    }
+    @NeedToken
+    @DeleteMapping("/deleteItem")
+    public R<String> deleteNavigationItem(String id){
+        log.info("id = {}",id);
+        if (StringUtils.isEmpty(id)){
+            return R.error("无操作对象");
+        }
+        return quickNavigationItemService.deleteNavigationItem(id);
 
     }
 
