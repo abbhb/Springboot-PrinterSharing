@@ -36,6 +36,10 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
+        if (numberOfPrintedPagesIndex.contains("-")){
+            String[] split = numberOfPrintedPagesIndex.split("-");
+            numberOfPrintedPagesIndex = split[1];
+        }
         try {
             PdfReader pdfReader = new PdfReader(Files.newInputStream(Paths.get(public_file + "\\" + newName)));
             
