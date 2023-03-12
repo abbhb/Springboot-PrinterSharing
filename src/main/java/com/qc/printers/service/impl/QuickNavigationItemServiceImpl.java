@@ -1,6 +1,7 @@
 package com.qc.printers.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.CustomException;
@@ -72,6 +73,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
             quickNavigationItemResult.setPath(quickNavigationItem.getPath());
             quickNavigationItemResult.setImage(quickNavigationItem.getImage());
+            quickNavigationItemResult.setType(quickNavigationItem.getType());
             String[] split = quickNavigationItem.getPermission().split(",");
             List<Integer> list = new ArrayList<>();
             for (String s:
@@ -130,6 +132,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         return R.error("添加失败");
     }
 
+    @Transactional
     @Override
     public R<String> deleteNavigationItem(String id) {
         if (StringUtils.isEmpty(id)){
@@ -152,5 +155,50 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         }
 
         return R.success("删除成功");
+    }
+
+    @Transactional
+    @Override
+    public R<String> updataForQuickNavigationItem(QuickNavigationItem quickNavigationItem) {
+        if (StringUtils.isEmpty(quickNavigationItem.getName())){
+            return R.error("更新失败");
+        }
+        if (quickNavigationItem.getId()==null){
+            return R.error("更新失败");
+        }
+        if (quickNavigationItem.getCategorizeId()==null){
+            return R.error("更新失败");
+        }
+        if (quickNavigationItem.getType()==null){
+            return R.error("更新失败");
+        }
+        if (StringUtils.isEmpty(quickNavigationItem.getPath())){
+            return R.error("更新失败");
+        }
+        if (StringUtils.isEmpty(quickNavigationItem.getName())){
+            return R.error("更新失败");
+        }
+        if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
+            return R.error("更新失败");
+        }
+        LambdaUpdateWrapper<QuickNavigationItem> quickNavigationItemLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getName,quickNavigationItem.getName());
+        quickNavigationItemLambdaUpdateWrapper.eq(QuickNavigationItem::getId,quickNavigationItem.getId());
+        quickNavigationItemLambdaUpdateWrapper.set(!StringUtils.isEmpty(quickNavigationItem.getImage()),QuickNavigationItem::getImage,quickNavigationItem.getImage());
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getIntroduction,quickNavigationItem.getIntroduction());
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPath,quickNavigationItem.getPath());
+        //权限存入数据库必须改逗号分隔格式
+        if (quickNavigationItem.getPermission().equals("2")){
+            quickNavigationItem.setPermission("1,2");
+        }
+
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPermission,quickNavigationItem.getPermission());
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getType,quickNavigationItem.getType());
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getCategorizeId,quickNavigationItem.getCategorizeId());
+        boolean update = super.update(quickNavigationItemLambdaUpdateWrapper);
+        if (update){
+            return R.success("更新成功");
+        }
+        return R.error("更新失败");
     }
 }

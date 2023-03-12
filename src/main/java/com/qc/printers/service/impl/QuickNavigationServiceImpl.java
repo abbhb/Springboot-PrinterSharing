@@ -59,6 +59,7 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setPath(quickNavigationItem.getPath());
                 quickNavigationItemResult.setImage(quickNavigationItem.getImage());
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
+                quickNavigationItemResult.setType(quickNavigationItem.getType());
                 quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
                 QuickNavigationCategorize quickNavigationCategorizeServiceById = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
                 log.info("quickNavigationCategorizeServiceById = {}",quickNavigationCategorizeServiceById);

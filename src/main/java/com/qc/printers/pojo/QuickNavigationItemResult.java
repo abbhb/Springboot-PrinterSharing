@@ -16,4 +16,10 @@ public class QuickNavigationItemResult {
     private String categorizeId;
 
     private String categorizeName;
+
+    /**
+     * 0:url
+     * 1:md
+     */
+    private Integer type;
 }

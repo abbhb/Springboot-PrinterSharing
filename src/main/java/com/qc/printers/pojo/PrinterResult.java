@@ -48,9 +48,4 @@ public class PrinterResult implements Serializable {
      */
     private String createUser;
 
-    /**
-     * 0:url
-     * 1:md
-     */
-    private Integer type;
 }

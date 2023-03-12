@@ -52,9 +52,5 @@ public class Printer implements Serializable {
      */
     private Long createUser;
 
-    /**
-     * 0:url
-     * 1:md
-     */
-    private Integer type;
+
 }

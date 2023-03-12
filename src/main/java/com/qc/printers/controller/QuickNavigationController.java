@@ -133,6 +133,25 @@ public class QuickNavigationController {
     }
 
     @NeedToken
+    @PutMapping("/updataforquicknavigationitem")
+    public R<String> updataForQuickNavigationItem(@RequestBody QuickNavigationItem quickNavigationItem){
+
+        if (StringUtils.isEmpty(quickNavigationItem.getName())){
+            return R.error("更新失败");
+        }
+        if (quickNavigationItem.getId()==null){
+            return R.error("更新失败");
+        }
+        if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
+            return R.error("更新失败");
+        }
+        if (StringUtils.isEmpty(quickNavigationItem.getPath())){
+            return R.error("更新失败");
+        }
+        return quickNavigationItemService.updataForQuickNavigationItem(quickNavigationItem);
+    }
+
+    @NeedToken
     @DeleteMapping("/deleteCategorize")
     public R<String> deleteNavigationCategorize(String id){
         log.info("id = {}",id);

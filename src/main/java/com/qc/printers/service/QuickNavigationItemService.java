@@ -14,4 +14,6 @@ public interface QuickNavigationItemService extends IService<QuickNavigationItem
     R<String> createNavItem(QuickNavigationItem quickNavigationItem);
 
     R<String> deleteNavigationItem(String id);
+
+    R<String> updataForQuickNavigationItem(QuickNavigationItem quickNavigationItem);
 }
