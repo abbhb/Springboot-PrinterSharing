@@ -48,7 +48,7 @@ public class PrintServiceImpl implements PrintService {
                 PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, pages, numberOfPrintedPages, printingDirection, printBigValue);
                 try {
                     Printer printer = new Printer();
-                    printer.setName(newName);
+                    printer.setName(oldName);
                     printer.setPrintingDirection(printingDirection);
                     printer.setNumberOfPrintedPages(numberOfPrintedPages);
                     printer.setPrintBigValue(printBigValue);
@@ -62,7 +62,19 @@ public class PrintServiceImpl implements PrintService {
                 return true;
             } else {
                 PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, Integer.parseInt(numberOfPrintedPagesIndex), numberOfPrintedPages, printingDirection, printBigValue);
-                
+                try {
+                    Printer printer = new Printer();
+                    printer.setName(oldName);
+                    printer.setPrintingDirection(printingDirection);
+                    printer.setNumberOfPrintedPages(numberOfPrintedPages);
+                    printer.setPrintBigValue(printBigValue);
+                    printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
+                    printer.setCreateUser(userId);
+                    printerService.addPrinter(printer);
+                } catch (Exception e) {
+                    // 捕获异常，重在打印，记录没记上算了
+                    log.error("捕获异常:{}", e.getMessage());
+                }
                 return true;
             }
         } catch (Exception e) {
@@ -83,7 +95,7 @@ public class PrintServiceImpl implements PrintService {
             String newNamePDF = UUID.randomUUID().toString() + ".pdf";
             WordPrintUtil.wordToPDF(public_file + "\\" + newName, public_file + "\\" + newNamePDF);
             // 后面就调用pdf打印就行
-            return printsForPDF(newNamePDF, newNamePDF, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, userId);
+            return printsForPDF(newNamePDF, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, userId);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

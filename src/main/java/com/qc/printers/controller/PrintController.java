@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
+import com.qc.printers.pojo.PrinterResult;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.utils.JWTUtil;
@@ -119,5 +120,10 @@ public class PrintController {
             throw new CustomException("异常");
 
         }
+    }
+
+    @GetMapping("/getMyHistoryPrints")
+    public R<PrinterResult> getMyHistoryPrints(){
+        return null;
     }
 }

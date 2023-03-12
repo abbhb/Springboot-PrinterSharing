@@ -21,7 +21,7 @@ mybatis-plus:
       id-type: ASSIGN_ID
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
-  url: http://192.168.12.12:9000
-  accessKey: reggit
-  secretKey: fiHiG66pBTwJ6Uvmrhq9Y7BkXyhMOMjy
-  bucketName: reggit
+  url: http://192.168.12.12:9090
+  accessKey: qvz3EsInB7yP10ps
+  secretKey: aWM9sGLm8ouRKAmLEwE5rPx2h5owRTrQ
+  bucketName: aistudio
