@@ -22,4 +22,6 @@ public class QuickNavigationItemResult {
      * 1:md
      */
     private Integer type;
+
+    private String content;
 }

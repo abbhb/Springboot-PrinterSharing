@@ -7,9 +7,12 @@ import com.qc.printers.pojo.QuickNavigationItemResult;
 import com.qc.printers.pojo.QuickNavigationResult;
 import com.qc.printers.pojo.entity.QuickNavigationCategorize;
 import com.qc.printers.pojo.entity.QuickNavigationItem;
+import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;
+import com.qc.printers.service.UserService;
+import com.qc.printers.utils.permissionstringsplit.MySplit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,10 +28,12 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
     private final QuickNavigationItemService quickNavigationItemService;
     private final QuickNavigationCategorizeService quickNavigationCategorizeService;
 
+    private final UserService userService;
     @Autowired
-    public QuickNavigationServiceImpl(QuickNavigationItemService quickNavigationItemService, QuickNavigationCategorizeService quickNavigationCategorizeService) {
+    public QuickNavigationServiceImpl(QuickNavigationItemService quickNavigationItemService, QuickNavigationCategorizeService quickNavigationCategorizeService, UserService userService) {
         this.quickNavigationItemService = quickNavigationItemService;
         this.quickNavigationCategorizeService = quickNavigationCategorizeService;
+        this.userService = userService;
     }
 
     @Override
@@ -39,6 +44,11 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
         List<QuickNavigationCategorize> quickNavigationCategorizes = quickNavigationCategorizeService.list();
         List<QuickNavigationItem> quickNavigationItems = quickNavigationItemService.list();
         List<QuickNavigationResult> quickNavigationResults = new ArrayList<>();
+
+        User userById = userService.getById(userId);
+        if (userById==null){
+            throw new CustomException("登录了吗?");
+        }
 
 
         for (QuickNavigationCategorize quickNavigationCategorize:
@@ -60,6 +70,9 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setImage(quickNavigationItem.getImage());
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
                 quickNavigationItemResult.setType(quickNavigationItem.getType());
+                //markdown
+                quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(),userById.getPermission()));
+
                 quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
                 QuickNavigationCategorize quickNavigationCategorizeServiceById = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
                 log.info("quickNavigationCategorizeServiceById = {}",quickNavigationCategorizeServiceById);

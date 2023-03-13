@@ -2,6 +2,7 @@ package com.qc.printers.controller;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.Code;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.QuickNavigationCategorizeResult;
@@ -145,8 +146,19 @@ public class QuickNavigationController {
         if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
             return R.error("更新失败");
         }
-        if (StringUtils.isEmpty(quickNavigationItem.getPath())){
-            return R.error("更新失败");
+
+        if (quickNavigationItem.getType()==null){
+            throw new CustomException("必参缺少");
+        }
+        if (quickNavigationItem.getType().equals(0)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getPath())){
+                throw new CustomException("必参缺少");
+            }
+        }
+        if (quickNavigationItem.getType().equals(1)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getContent())){
+                throw new CustomException("必参缺少");
+            }
         }
         return quickNavigationItemService.updataForQuickNavigationItem(quickNavigationItem);
     }

@@ -74,6 +74,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             quickNavigationItemResult.setPath(quickNavigationItem.getPath());
             quickNavigationItemResult.setImage(quickNavigationItem.getImage());
             quickNavigationItemResult.setType(quickNavigationItem.getType());
+            quickNavigationItemResult.setContent(quickNavigationItem.getContent());
             String[] split = quickNavigationItem.getPermission().split(",");
             List<Integer> list = new ArrayList<>();
             for (String s:
@@ -111,16 +112,25 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         if(StringUtils.isEmpty(quickNavigationItem.getName())){
             throw new CustomException("必参缺少");
         }
-        if(StringUtils.isEmpty(quickNavigationItem.getPath())){
-            throw new CustomException("必参缺少");
-        }
         if(quickNavigationItem.getCategorizeId()==null){
             throw new CustomException("必参缺少");
         }
         if(StringUtils.isEmpty(quickNavigationItem.getPermission())){
             throw new CustomException("必参缺少");
         }
-
+        if (quickNavigationItem.getType()==null){
+            throw new CustomException("必参缺少");
+        }
+        if (quickNavigationItem.getType().equals(0)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getPath())){
+                throw new CustomException("必参缺少");
+            }
+        }
+        if (quickNavigationItem.getType().equals(1)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getContent())){
+                throw new CustomException("必参缺少");
+            }
+        }
         //权限存入数据库必须改逗号分隔格式
         if (quickNavigationItem.getPermission().equals("2")){
             quickNavigationItem.setPermission("1,2");
@@ -172,14 +182,24 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         if (quickNavigationItem.getType()==null){
             return R.error("更新失败");
         }
-        if (StringUtils.isEmpty(quickNavigationItem.getPath())){
-            return R.error("更新失败");
-        }
         if (StringUtils.isEmpty(quickNavigationItem.getName())){
             return R.error("更新失败");
         }
         if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
             return R.error("更新失败");
+        }
+        if (quickNavigationItem.getType()==null){
+            throw new CustomException("必参缺少");
+        }
+        if (quickNavigationItem.getType().equals(0)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getPath())){
+                throw new CustomException("必参缺少");
+            }
+        }
+        if (quickNavigationItem.getType().equals(1)) {
+            if(StringUtils.isEmpty(quickNavigationItem.getContent())){
+                throw new CustomException("必参缺少");
+            }
         }
         LambdaUpdateWrapper<QuickNavigationItem> quickNavigationItemLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getName,quickNavigationItem.getName());
@@ -187,6 +207,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         quickNavigationItemLambdaUpdateWrapper.set(!StringUtils.isEmpty(quickNavigationItem.getImage()),QuickNavigationItem::getImage,quickNavigationItem.getImage());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getIntroduction,quickNavigationItem.getIntroduction());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPath,quickNavigationItem.getPath());
+        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getContent,quickNavigationItem.getContent());
         //权限存入数据库必须改逗号分隔格式
         if (quickNavigationItem.getPermission().equals("2")){
             quickNavigationItem.setPermission("1,2");
