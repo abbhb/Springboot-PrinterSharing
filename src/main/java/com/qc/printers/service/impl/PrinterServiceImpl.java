@@ -21,7 +21,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
 
     @Transactional
     @Override
-    public boolean addPrinter(Printer printer) {
+    public boolean addPrinter(Printer printer,String urlName) {
         if (StringUtils.isEmpty(printer.getName())){
             log.error("打印记录缺失");
             return false;
@@ -30,7 +30,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             return false;
         }
-        String fileUrl = public_file+"\\"+printer.getName();
+        String fileUrl = public_file+"\\"+urlName;
         try {
             printer.setContentHash(FileMD5.md5HashCode(fileUrl));
             boolean save = super.save(printer);

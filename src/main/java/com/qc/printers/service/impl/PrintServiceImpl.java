@@ -58,7 +58,7 @@ public class PrintServiceImpl implements PrintService {
                     printer.setPrintBigValue(printBigValue);
                     printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
                     printer.setCreateUser(userId);
-                    printerService.addPrinter(printer);
+                    printerService.addPrinter(printer,newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
@@ -74,7 +74,7 @@ public class PrintServiceImpl implements PrintService {
                     printer.setPrintBigValue(printBigValue);
                     printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
                     printer.setCreateUser(userId);
-                    printerService.addPrinter(printer);
+                    printerService.addPrinter(printer,newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());

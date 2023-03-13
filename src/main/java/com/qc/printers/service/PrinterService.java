@@ -8,5 +8,5 @@ import com.qc.printers.pojo.entity.Printer;
  */
 public interface PrinterService extends IService<Printer> {
 
-    boolean addPrinter(Printer printer);
+    boolean addPrinter(Printer printer,String urlName);
 }
