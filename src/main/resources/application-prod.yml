@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    active: prod
+  application:
+    name: printes
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://192.168.12.12:13306/print?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: root
+      password: aizhineng1404
+    type: com.alibaba.druid.pool.DruidDataSource
+mybatis-plus:
+  configuration:
+    #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    #雪花算法
+    db-config:
+      id-type: ASSIGN_ID
+# ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
+minio:
+  url: http://10.15.245.153:9090
+  accessKey: qvz3EsInB7yP10ps
+  secretKey: aWM9sGLm8ouRKAmLEwE5rPx2h5owRTrQ
+  bucketName: aistudio

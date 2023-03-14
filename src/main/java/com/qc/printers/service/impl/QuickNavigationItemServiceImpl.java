@@ -57,7 +57,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         }
         Page<QuickNavigationItem> pageInfo = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<QuickNavigationItem> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(!StringUtils.isEmpty(name),QuickNavigationItem::getName,name);
+        lambdaQueryWrapper.like(!StringUtils.isEmpty(name),QuickNavigationItem::getName,name);
         super.page(pageInfo,lambdaQueryWrapper);
 
         log.info("pageInfo = {}",pageInfo);
