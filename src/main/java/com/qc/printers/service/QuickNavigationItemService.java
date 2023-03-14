@@ -9,7 +9,7 @@ import com.qc.printers.pojo.entity.QuickNavigationItem;
 public interface QuickNavigationItemService extends IService<QuickNavigationItem> {
     boolean hasId(Long valueOf);
 
-    R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name);
+    R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name,String selectCate);
 
     R<String> createNavItem(QuickNavigationItem quickNavigationItem);
 

@@ -104,9 +104,9 @@ public class QuickNavigationController {
     @NeedToken
     @GetMapping("/listnavfenleiitem")
     //后期可以传回token拿到用户信息
-    public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name) {
-
-        return quickNavigationItemService.listNavFenLeiItem(pageNum,pageSize,name);
+    public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name,String selectCate) {
+        log.info("selectCate={}",selectCate);
+        return quickNavigationItemService.listNavFenLeiItem(pageNum,pageSize,name,selectCate);
 
     }
 

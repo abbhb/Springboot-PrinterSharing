@@ -48,19 +48,29 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
     }
 
     @Override
-    public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name) {
+    public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name,String selectCate) {
         if (pageNum==null){
             return R.error("传参错误");
         }
         if (pageSize==null){
             return R.error("传参错误");
         }
+
         Page<QuickNavigationItem> pageInfo = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<QuickNavigationItem> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //条件过滤
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name),QuickNavigationItem::getName,name);
+        if (!StringUtils.isEmpty(selectCate)){
+            for (String sss:
+                 selectCate.split(",")) {
+                if (!StringUtils.isEmpty(sss)){
+                    lambdaQueryWrapper.or().eq(QuickNavigationItem::getCategorizeId,Long.valueOf(sss));
+                }
+            }
+        }
         super.page(pageInfo,lambdaQueryWrapper);
 
-        log.info("pageInfo = {}",pageInfo);
+//        log.info("pageInfo = {}",pageInfo);
 
         PageData<QuickNavigationItemResult> pageData = new PageData<>();
         List<QuickNavigationItemResult> results = new ArrayList<>();
@@ -89,7 +99,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             * 后期这种简单粗暴可以优化成map里找
             * */
             QuickNavigationCategorize quickNavigationCategorize = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
-            log.info("quickNavigationCategorize = {}",quickNavigationCategorize);
+//            log.info("quickNavigationCategorize = {}",quickNavigationCategorize);
             if (quickNavigationCategorize==null){
                 throw new CustomException("运行异常");
             }
