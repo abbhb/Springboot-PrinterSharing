@@ -58,7 +58,7 @@ public class MySplit {
 
 //            #######进行业务操作即可###########
             }
-            log.info("newContent = {}", newContent);
+//            log.info("newContent = {}", newContent);
             return newContent.toString();
         }else{
             String newContent = "";
@@ -78,7 +78,7 @@ public class MySplit {
 
 //            #######进行业务操作即可###########
             }
-            log.info("newContent = {}",newContent);
+//            log.info("newContent = {}",newContent);
             return newContent.toString();
 
         }

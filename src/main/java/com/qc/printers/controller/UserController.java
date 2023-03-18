@@ -8,24 +8,32 @@ import com.qc.printers.common.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.ToEmail;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.service.CommonService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/user")
+
 @Slf4j
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final CommonService commonService;
+    public UserController(UserService userService, CommonService commonService) {
         this.userService = userService;
+        this.commonService = commonService;
     }
+
 
     @PostMapping("/login")
     public R<UserResult> login(@RequestBody Map<String, Object> user){
@@ -34,9 +42,36 @@ public class UserController {
         String password = (String) user.get("password");
         return userService.login(username,password);
     }
+    @NeedToken
+    @PostMapping("/createemailcode")
+    public R<String> createEmailCode(@RequestBody Map<String, Object> email,@RequestHeader(value="Authorization", defaultValue = "") String token){
+        System.out.println("email = " + email);
+        String emails = (String) email.get("email");
+        ToEmail toEmail = new ToEmail();
+        List<String> strings = new ArrayList<>();
+        strings.add(emails);
+        toEmail.setTos(strings.toArray(new String[strings.size()]));
+        return commonService.sendEmailCode(toEmail,token);
+    }
+    @NeedToken
+    @PostMapping("/emailwithuser")
+    public R<String> emailWithUser(@RequestBody Map<String, Object> email,@RequestHeader(value="Authorization", defaultValue = "") String token){
+        System.out.println("email = " + email);
+        String emails = (String) email.get("email");
+        String code = (String) email.get("code");
+        return userService.emailWithUser(emails,code,token);
+    }
 
     @PostMapping("/create")
-    public R<String> create(@RequestBody User user,@RequestHeader(value="Authorization", defaultValue = "") String token){
+    public R<String> create(@RequestBody User user){
+        System.out.println("user = " + user);
+        return userService.createUser(user,0L);
+
+    }
+
+    @NeedToken
+    @PostMapping("/add")
+    public R<String> add(@RequestBody User user,@RequestHeader(value="Authorization", defaultValue = "") String token){
         System.out.println("user = " + user);
 //        String username = (String) user.get("username");
 //        String password = (String) user.get("password");
@@ -60,6 +95,7 @@ public class UserController {
 
 
     }
+
     @NeedToken
     @PostMapping("/logout")
     public R<UserResult> logout(@RequestHeader(value="Authorization", defaultValue = "") String token){

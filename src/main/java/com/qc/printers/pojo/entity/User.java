@@ -52,4 +52,9 @@ public class User implements Serializable {
     //分组
     private Integer permission;
 //    private Long role;//权限更改为角色，再去查询角色所有的权限
+
+    //绑定邮箱
+    private String email;
+
+    private String avatar;
 }

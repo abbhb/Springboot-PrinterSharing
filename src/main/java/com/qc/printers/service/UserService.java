@@ -28,4 +28,6 @@ public interface UserService extends IService<User> {
     R<String> deleteUsers(String id,Long userId);
 
     R<String> hasUserName(String username);
+
+    R<String> emailWithUser(String emails, String code, String token);
 }

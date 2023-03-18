@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
+
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.UserResult;
@@ -41,6 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         this.iStringRedisService = iStringRedisService;
     }
 
+
     @Override
     public R<UserResult> login(String username, String password) {
         if (username==null||username.equals("")){
@@ -68,7 +70,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
         iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
         return R.success(UserResult);
     }
 
@@ -87,6 +89,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (StringUtils.isEmpty(user.getPassword())){
             throw new CustomException("password");
+        }
+        if (!StringUtils.isEmpty(user.getEmail())){
+            throw new CustomException("参数异常");
         }
         if (!user.getPassword().matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
             return R.error("密码必须字母加数字,8-16位");
@@ -138,7 +143,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (one==null){
             return R.error("err");
         }
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token);
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
         return R.success(UserResult);
     }
 
@@ -324,7 +329,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
            
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),null);
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),null,user1.getEmail(),user1.getAvatar());
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -384,5 +389,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return R.error("请换一个用户名试试!");
 
+    }
+
+    @Transactional
+    @Override
+    public R<String> emailWithUser(String emails, String code, String token) {
+        if (StringUtils.isEmpty(emails)||StringUtils.isEmpty(code)||StringUtils.isEmpty(token)){
+            throw new CustomException("参数异常");
+        }
+
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            if (!iStringRedisService.getValue("emailcode:"+id.asString()).equals(code)){
+                throw new CustomException("验证码错误");
+            }
+            LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.set(User::getEmail,emails);
+            lambdaUpdateWrapper.eq(User::getId,Long.valueOf(id.asString()));
+            boolean update = super.update(lambdaUpdateWrapper);
+            if (update){
+                return R.success("绑定成功");
+            }
+            return R.error("异常");
+        }catch (Exception e){
+            return R.error(Code.DEL_TOKEN,"登陆过期");
+        }
     }
 }
