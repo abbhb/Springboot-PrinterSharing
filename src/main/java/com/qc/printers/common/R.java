@@ -1,5 +1,6 @@
 package com.qc.printers.common;
 
+import com.qc.printers.pojo.UserResult;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -60,6 +61,13 @@ public class R<T> {
         R r = new R();
         r.msg = msg;
         r.code = code;
+        return r;
+    }
+
+    public static <T> R<T> successOnlyObjectWithStatus(T object,Integer code) {
+        R<T> r = new R<T>();
+        r.code = code;
+        r.data = object;
         return r;
     }
 
