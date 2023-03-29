@@ -9,6 +9,8 @@ import com.qc.printers.pojo.entity.User;
 public interface UserService extends IService<User> {
     R<UserResult> login(String username, String password);
 
+    R<UserResult> loginByEmail(String email, String password);
+
     R<String> createUser(User user,Long userId);
 
     R<UserResult> logout(String token);
@@ -30,4 +32,5 @@ public interface UserService extends IService<User> {
     R<String> hasUserName(String username);
 
     R<String> emailWithUser(String emails, String code, String token);
+
 }

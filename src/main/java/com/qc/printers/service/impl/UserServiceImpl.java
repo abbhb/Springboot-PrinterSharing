@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static com.qc.printers.utils.paramsCalibration.checkSensitiveWords;
+import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
 
 @Service
 @Slf4j
@@ -92,6 +92,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return R.success(UserResult);
     }
 
+    @Override
+    public R<UserResult> loginByEmail(String email, String password) {
+        if (email==null||email.equals("")){
+            return R.error("邮箱不存在");
+        }
+        if (password==null||password.equals("")){
+            return R.error("密码不存在");
+        }
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getEmail,email);
+        User one = super.getOne(queryWrapper);
+        if (one==null){
+            return R.error("用户名或密码错误");
+        }
+        String salt = one.getSalt();
+        if (!PWDMD5.getMD5Encryption(password,salt).equals(one.getPassword())){//前端传入的明文密码加上后端的盐，处理后跟库中密码比对，一样登陆成功
+            return R.error("用户名或密码错误");
+        }
+
+        if(one.getStatus() == 0){
+            return R.error("账号已禁用!");
+        }
+        //jwt生成token，token里面有userid，redis里存uuid
+        String uuid = RandomName.getUUID();//uuid作为key
+
+        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
+        iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
+        return R.success(UserResult);
+    }
+
     @Transactional
     @Override
     public R<String> createUser(User user,Long userId) {
@@ -110,6 +141,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (!StringUtils.isEmpty(user.getEmail())){
             throw new CustomException("参数异常");
+        }
+        if (user.getUsername().contains("@")){
+            throw new CustomException("不可包含'@'");
         }
         if (!user.getPassword().matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
             return R.error("密码必须字母加数字,8-16位");
@@ -422,6 +456,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (!iStringRedisService.getValue("emailcode:"+id.asString()).equals(code)){
                 throw new CustomException("验证码错误");
             }
+            LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapperCount.eq(User::getEmail,emails);
+            int count = super.count(userLambdaQueryWrapperCount);
+            if (count>0){
+                throw new CustomException("该账号已经绑定过帐号了!");
+            }
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getEmail,emails);
             lambdaUpdateWrapper.eq(User::getId,Long.valueOf(id.asString()));
@@ -434,4 +474,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return R.error(Code.DEL_TOKEN,"登陆过期");
         }
     }
+
 }

@@ -1,7 +1,6 @@
 package com.qc.printers.service.impl;
 
 import com.itextpdf.text.pdf.PdfReader;
-import com.qc.printers.common.CustomException;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
@@ -13,13 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
-import static com.qc.printers.utils.paramsCalibration.checkBeforePrint;
+import static com.qc.printers.utils.ParamsCalibration.checkBeforePrint;
 
 @Service
 @Slf4j

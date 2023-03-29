@@ -2,13 +2,10 @@ package com.qc.printers.utils;
 
 import com.qc.printers.common.CustomException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * 参数校验工具类
  */
-public class paramsCalibration {
+public class ParamsCalibration {
     public static void checkBeforePrint(Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex) {
         if (numberOfPrintedPages == null) {
             throw new CustomException("err: numberOfPrintedPages is null");
@@ -28,6 +25,20 @@ public class paramsCalibration {
         if (sensitiveWords.contains(word)){
             throw new CustomException("err: 敏感词");
 
+        }
+    }
+
+    /**
+     * @param username
+     * @return 0:账户密码登录 1:邮箱登录
+     */
+    public static int booleanLoginType(String username){
+
+        String em = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$";
+        if (username.matches(em)){
+            return 1;
+        }else {
+            return 0;
         }
     }
 }

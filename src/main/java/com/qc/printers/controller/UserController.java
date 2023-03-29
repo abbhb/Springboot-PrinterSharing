@@ -13,6 +13,7 @@ import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.utils.ParamsCalibration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -37,10 +38,18 @@ public class UserController {
 
     @PostMapping("/login")
     public R<UserResult> login(@RequestBody Map<String, Object> user){
-        System.out.println("user = " + user);
         String username = (String) user.get("username");
         String password = (String) user.get("password");
-        return userService.login(username,password);
+        int type = ParamsCalibration.booleanLoginType(username);
+        if (type==0){
+            return userService.login(username,password);
+        }else if (type==1){
+            return userService.loginByEmail(username,password);
+        }else {
+            return R.error("不符合规则");
+        }
+
+
     }
     @NeedToken
     @PostMapping("/createemailcode")
