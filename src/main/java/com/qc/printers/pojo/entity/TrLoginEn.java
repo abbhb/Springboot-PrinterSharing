@@ -1,5 +1,7 @@
 package com.qc.printers.pojo.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
@@ -19,5 +21,6 @@ public class TrLoginEn implements Serializable {
     private Integer status;
 
     @TableLogic
+    @TableField(fill = FieldFill.INSERT)
     private Integer isDeleted;
 }

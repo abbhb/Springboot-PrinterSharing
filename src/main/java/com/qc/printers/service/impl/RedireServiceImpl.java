@@ -83,6 +83,14 @@ public class RedireServiceImpl implements RedirectService {
         trLoginEnLambdaQueryWrapper.eq(TrLoginEn::getTrId,Long.valueOf(trID));
         TrLoginEn trLoginEn = trLoginEnService.getOne(trLoginEnLambdaQueryWrapper);
         if (trLoginEn==null){
+            TrLoginEn trLoginEn1 = new TrLoginEn();
+            trLoginEn1.setTrId(Long.valueOf(trID));
+            trLoginEn1.setStatus(0);
+            trLoginEn1.setIsDeleted(0);
+            boolean save = trLoginEnService.save(trLoginEn1);
+            if (!save){
+                throw new CustomException("err");
+            }
             //首次使用该第三方,返回msg，让前端让弹出表单进行绑定或者新建
             UserResult userResult = new UserResult();
             userResult.setId(trID);
