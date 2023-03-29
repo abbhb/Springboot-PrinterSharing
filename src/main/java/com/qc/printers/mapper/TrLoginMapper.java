@@ -1,9 +1,9 @@
 package com.qc.printers.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qc.printers.pojo.entity.TrLoginEn;
+import com.qc.printers.pojo.entity.TrLogin;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface TrLoginEnMapper extends BaseMapper<TrLoginEn> {
+public interface TrLoginMapper extends BaseMapper<TrLogin> {
 }

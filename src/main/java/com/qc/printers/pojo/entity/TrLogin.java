@@ -8,7 +8,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class TrLoginEn implements Serializable {
+public class TrLogin implements Serializable {
     private Long id;
 
     //第三方平台ID
@@ -23,4 +23,11 @@ public class TrLoginEn implements Serializable {
     @TableLogic
     @TableField(fill = FieldFill.INSERT)
     private Integer isDeleted;
+
+    /**
+     * 关键参数
+     * 标识第三方
+     * 1：ENRoom
+     */
+    private Integer type;
 }

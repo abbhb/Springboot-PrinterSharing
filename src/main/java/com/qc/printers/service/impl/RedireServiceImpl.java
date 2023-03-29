@@ -1,25 +1,23 @@
 package com.qc.printers.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.TrLoginEn;
+import com.qc.printers.pojo.entity.TrLogin;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.IStringRedisService;
 import com.qc.printers.service.RedirectService;
-import com.qc.printers.service.TrLoginEnService;
+import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.PWDMD5;
 import com.qc.printers.utils.RandomName;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -35,20 +33,25 @@ public class RedireServiceImpl implements RedirectService {
 
     private final RestTemplate restTemplate;
 
-    private final TrLoginEnService trLoginEnService;
+    private final TrLoginService trLoginService;
 
     private final IStringRedisService iStringRedisService;
 
     private final UserService userService;
 
     @Autowired
-    public RedireServiceImpl(RestTemplate restTemplate, TrLoginEnService trLoginEnService, IStringRedisService iStringRedisService, UserService userService) {
+    public RedireServiceImpl(RestTemplate restTemplate, TrLoginService trLoginService, IStringRedisService iStringRedisService, UserService userService) {
         this.restTemplate = restTemplate;
-        this.trLoginEnService = trLoginEnService;
+        this.trLoginService = trLoginService;
         this.iStringRedisService = iStringRedisService;
         this.userService = userService;
     }
 
+    /**
+     * ENOAuth登录
+     * @param code
+     * @return
+     */
     @Transactional
     @Override
     public R<UserResult> enRedirect(String code) {
@@ -67,9 +70,7 @@ public class RedireServiceImpl implements RedirectService {
         System.out.println(result);
         Map map = JSON.parseObject(result, Map.class);
         String accessToken = (String) map.get("access_token");
-
         String url2 = "http://10.15.247.254/en/oauth/me/?access_token="+accessToken;
-
         //1. getForObject()
         //先获取返回的字符串，若想获取属性，可以使用gson转化为实体后get方法获取
         String result2 = restTemplate.getForObject(url2, String.class);
@@ -79,15 +80,17 @@ public class RedireServiceImpl implements RedirectService {
         if (StringUtils.isEmpty(trID)){
             return R.error("登录失败");
         }
-        LambdaQueryWrapper<TrLoginEn> trLoginEnLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        trLoginEnLambdaQueryWrapper.eq(TrLoginEn::getTrId,Long.valueOf(trID));
-        TrLoginEn trLoginEn = trLoginEnService.getOne(trLoginEnLambdaQueryWrapper);
-        if (trLoginEn==null){
-            TrLoginEn trLoginEn1 = new TrLoginEn();
-            trLoginEn1.setTrId(Long.valueOf(trID));
-            trLoginEn1.setStatus(0);
-            trLoginEn1.setIsDeleted(0);
-            boolean save = trLoginEnService.save(trLoginEn1);
+        LambdaQueryWrapper<TrLogin> trLoginEnLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        trLoginEnLambdaQueryWrapper.eq(TrLogin::getTrId,Long.valueOf(trID));
+        trLoginEnLambdaQueryWrapper.eq(TrLogin::getType,1);
+        TrLogin trLogin = trLoginService.getOne(trLoginEnLambdaQueryWrapper);
+        if (trLogin ==null){
+            TrLogin trLogin1 = new TrLogin();
+            trLogin1.setTrId(Long.valueOf(trID));
+            trLogin1.setStatus(0);
+            trLogin1.setIsDeleted(0);
+            trLogin1.setType(1);
+            boolean save = trLoginService.save(trLogin1);
             if (!save){
                 throw new CustomException("err");
             }
@@ -95,9 +98,9 @@ public class RedireServiceImpl implements RedirectService {
             UserResult userResult = new UserResult();
             userResult.setId(trID);
             return R.successOnlyObjectWithStatus(userResult, Code.SUCCESSWITHQ);
-        } else if (trLoginEn.getStatus().equals(1)){
+        } else if (trLogin.getStatus().equals(1)){
             //已经绑定或者注册了,直接登录
-            Long userId = trLoginEn.getUserId();
+            Long userId = trLogin.getUserId();
             if (userId==null){
                 return R.error("登录失败");
             }
@@ -107,7 +110,7 @@ public class RedireServiceImpl implements RedirectService {
             iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
             UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
             return R.success(UserResult);
-        } else if (trLoginEn.getStatus().equals(0)) {
+        } else if (trLogin.getStatus().equals(0)) {
             //首次使用该第三方,返回msg，让前端让弹出表单进行绑定或者新建
             UserResult userResult = new UserResult();
             userResult.setId(trID);
@@ -143,22 +146,23 @@ public class RedireServiceImpl implements RedirectService {
         System.out.println(md5Encryption);
         System.out.println(one.getPassword());
         if (md5Encryption.equals(one.getPassword())){
-            TrLoginEn trLoginEn = new TrLoginEn();
-            trLoginEn.setTrId(trId);
-            trLoginEn.setStatus(1);
-            trLoginEn.setUserId(one.getId());
-            trLoginEn.setTrId(trId);
+            TrLogin trLogin = new TrLogin();
+            trLogin.setTrId(trId);
+            trLogin.setStatus(1);
+            trLogin.setUserId(one.getId());
+            trLogin.setTrId(trId);
+            trLogin.setType(1);
             if (type.equals(1)){
                 //绑定原有账号
-                LambdaUpdateWrapper<TrLoginEn> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                lambdaUpdateWrapper.eq(TrLoginEn::getTrId,trId);
-                lambdaUpdateWrapper.set(TrLoginEn::getUserId,one.getId());
-                lambdaUpdateWrapper.set(TrLoginEn::getStatus,1);
-                boolean update = trLoginEnService.update(lambdaUpdateWrapper);
+                LambdaUpdateWrapper<TrLogin> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                lambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
+                lambdaUpdateWrapper.set(TrLogin::getUserId,one.getId());
+                lambdaUpdateWrapper.set(TrLogin::getStatus,1);
+                boolean update = trLoginService.update(lambdaUpdateWrapper);
                 if (!update){
                     throw new CustomException("服务异常");
                 }
-                Long userId = trLoginEn.getUserId();
+                Long userId = trLogin.getUserId();
                 if (userId==null){
                     return R.error("登录失败");
                 }
@@ -180,6 +184,7 @@ public class RedireServiceImpl implements RedirectService {
                 user.setPassword(createMD5Encryption);
                 user.setStatus(1);
                 user.setUsername(username);
+                //和注册一样，只能是用户权限
                 user.setPermission(2);
                 user.setName(RandomName.getUUID());
                 user.setAvatar("未知");
@@ -187,11 +192,11 @@ public class RedireServiceImpl implements RedirectService {
                 if (!save){
                     throw new CustomException("出现了问题");
                 }
-                LambdaUpdateWrapper<TrLoginEn> trLoginEnLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                trLoginEnLambdaUpdateWrapper.eq(TrLoginEn::getTrId,trId);
-                trLoginEnLambdaUpdateWrapper.set(TrLoginEn::getUserId,user.getId());
-                trLoginEnLambdaUpdateWrapper.set(TrLoginEn::getStatus,1);
-                boolean update = trLoginEnService.update(trLoginEnLambdaUpdateWrapper);
+                LambdaUpdateWrapper<TrLogin> trLoginEnLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                trLoginEnLambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
+                trLoginEnLambdaUpdateWrapper.set(TrLogin::getUserId,user.getId());
+                trLoginEnLambdaUpdateWrapper.set(TrLogin::getStatus,1);
+                boolean update = trLoginService.update(trLoginEnLambdaUpdateWrapper);
                 if (!update){
                     throw new CustomException("trLoginEnService:err");
                 }
