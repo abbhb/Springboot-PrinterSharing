@@ -79,7 +79,7 @@ public class QuickNavigationController {
      */
     @PostMapping("/createItem")
     public R<String> createItem(@RequestBody QuickNavigationItem quickNavigationItem){
-        System.out.println("quickNavigationItem = " + quickNavigationItem);
+//        System.out.println("quickNavigationItem = " + quickNavigationItem);
 
         return quickNavigationItemService.createNavItem(quickNavigationItem);
 
@@ -91,7 +91,7 @@ public class QuickNavigationController {
      */
     @PostMapping("/createCategorize")
     public R<String> createCategorize(@RequestBody QuickNavigationCategorize quickNavigationCategorize){
-        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
+//        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
 
         return quickNavigationCategorizeService.createNavCategorize(quickNavigationCategorize);
 
@@ -105,7 +105,7 @@ public class QuickNavigationController {
     @GetMapping("/listnavfenleiitem")
     //后期可以传回token拿到用户信息
     public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name,String selectCate) {
-        log.info("selectCate={}",selectCate);
+//        log.info("selectCate={}",selectCate);
         return quickNavigationItemService.listNavFenLeiItem(pageNum,pageSize,name,selectCate);
 
     }
