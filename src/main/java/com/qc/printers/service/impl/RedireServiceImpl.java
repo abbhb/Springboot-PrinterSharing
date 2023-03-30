@@ -145,72 +145,74 @@ public class RedireServiceImpl implements RedirectService {
         String md5Encryption = PWDMD5.getMD5Encryption(password, one.getSalt());
         System.out.println(md5Encryption);
         System.out.println(one.getPassword());
-        if (md5Encryption.equals(one.getPassword())){
-            TrLogin trLogin = new TrLogin();
-            trLogin.setTrId(trId);
-            trLogin.setStatus(1);
-            trLogin.setUserId(one.getId());
-            trLogin.setTrId(trId);
-            trLogin.setType(1);
-            if (type.equals(1)){
-                //绑定原有账号
-                LambdaUpdateWrapper<TrLogin> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                lambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
-                lambdaUpdateWrapper.set(TrLogin::getUserId,one.getId());
-                lambdaUpdateWrapper.set(TrLogin::getStatus,1);
-                boolean update = trLoginService.update(lambdaUpdateWrapper);
-                if (!update){
-                    throw new CustomException("服务异常");
-                }
-                Long userId = trLogin.getUserId();
-                if (userId==null){
-                    return R.error("登录失败");
-                }
-                String uuid = RandomName.getUUID();//uuid作为key
-                User ones = userService.getById(userId);
-                String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
-                iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
-                UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
-                return R.success(UserResult);
-            }else if (type.equals(2)){
-                if (!password.matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
-                    return R.error("密码必须字母加数字,8-16位");
-                }
-                String salts = PWDMD5.getSalt();
-                //给密码加盐加密
-                String createMD5Encryption = PWDMD5.getMD5Encryption(password,salts);
-                User user = new User();
-                user.setSalt(salts);
-                user.setPassword(createMD5Encryption);
-                user.setStatus(1);
-                user.setUsername(username);
-                //和注册一样，只能是用户权限
-                user.setPermission(2);
-                user.setName(RandomName.getUUID());
-                user.setAvatar("未知");
-                boolean save = userService.save(user);
-                if (!save){
-                    throw new CustomException("出现了问题");
-                }
-                LambdaUpdateWrapper<TrLogin> trLoginEnLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                trLoginEnLambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
-                trLoginEnLambdaUpdateWrapper.set(TrLogin::getUserId,user.getId());
-                trLoginEnLambdaUpdateWrapper.set(TrLogin::getStatus,1);
-                boolean update = trLoginService.update(trLoginEnLambdaUpdateWrapper);
-                if (!update){
-                    throw new CustomException("trLoginEnService:err");
-                }
-                String uuid = RandomName.getUUID();//uuid作为key
-                User ones = userService.getById(user.getId());
-                String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
-                iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
-                UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
-                return R.success(UserResult);
-            }
-        }else {
-            return R.error("密码错了");
-        }
 
+        if (type.equals(1)){
+            TrLogin trLogin = new TrLogin();
+            if (md5Encryption.equals(one.getPassword())){
+
+                trLogin.setTrId(trId);
+                trLogin.setStatus(1);
+                trLogin.setUserId(one.getId());
+                trLogin.setTrId(trId);
+                trLogin.setType(1);
+
+            }else {
+                return R.error("密码错了");
+            }
+            //绑定原有账号
+            LambdaUpdateWrapper<TrLogin> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
+            lambdaUpdateWrapper.set(TrLogin::getUserId,one.getId());
+            lambdaUpdateWrapper.set(TrLogin::getStatus,1);
+            boolean update = trLoginService.update(lambdaUpdateWrapper);
+            if (!update){
+                throw new CustomException("服务异常");
+            }
+            Long userId = trLogin.getUserId();
+            if (userId==null){
+                return R.error("登录失败");
+            }
+            String uuid = RandomName.getUUID();//uuid作为key
+            User ones = userService.getById(userId);
+            String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
+            iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
+            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
+            return R.success(UserResult);
+        }else if (type.equals(2)){
+            if (!password.matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
+                return R.error("密码必须字母加数字,8-16位");
+            }
+            String salts = PWDMD5.getSalt();
+            //给密码加盐加密
+            String createMD5Encryption = PWDMD5.getMD5Encryption(password,salts);
+            User user = new User();
+            user.setSalt(salts);
+            user.setPassword(createMD5Encryption);
+            user.setStatus(1);
+            user.setUsername(username);
+            //和注册一样，只能是用户权限
+            user.setPermission(2);
+            user.setName(RandomName.getUUID());
+            user.setAvatar("未知");
+            boolean save = userService.save(user);
+            if (!save){
+                throw new CustomException("出现了问题");
+            }
+            LambdaUpdateWrapper<TrLogin> trLoginEnLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            trLoginEnLambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
+            trLoginEnLambdaUpdateWrapper.set(TrLogin::getUserId,user.getId());
+            trLoginEnLambdaUpdateWrapper.set(TrLogin::getStatus,1);
+            boolean update = trLoginService.update(trLoginEnLambdaUpdateWrapper);
+            if (!update){
+                throw new CustomException("trLoginEnService:err");
+            }
+            String uuid = RandomName.getUUID();//uuid作为key
+            User ones = userService.getById(user.getId());
+            String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
+            iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
+            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
+            return R.success(UserResult);
+        }
         return null;
     }
 }
