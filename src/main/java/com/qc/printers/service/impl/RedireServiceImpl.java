@@ -136,17 +136,18 @@ public class RedireServiceImpl implements RedirectService {
         if (StringUtils.isEmpty(password)){
             throw new CustomException("业务异常");
         }
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getUsername, username);
-        User one = userService.getOne(userLambdaQueryWrapper);
-        if (one==null){
-            throw new CustomException("服务异常");
-        }
-        String md5Encryption = PWDMD5.getMD5Encryption(password, one.getSalt());
-        System.out.println(md5Encryption);
-        System.out.println(one.getPassword());
+
 
         if (type.equals(1)){
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUsername, username);
+            User one = userService.getOne(userLambdaQueryWrapper);
+            if (one==null){
+                throw new CustomException("服务异常");
+            }
+            String md5Encryption = PWDMD5.getMD5Encryption(password, one.getSalt());
+            System.out.println(md5Encryption);
+            System.out.println(one.getPassword());
             TrLogin trLogin = new TrLogin();
             if (md5Encryption.equals(one.getPassword())){
 
