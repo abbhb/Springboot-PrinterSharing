@@ -194,7 +194,7 @@ public class RedireServiceImpl implements RedirectService {
             //和注册一样，只能是用户权限
             user.setPermission(2);
             user.setName(RandomName.getUUID());
-            user.setAvatar("未知");
+            user.setSex("未知");
             boolean save = userService.save(user);
             if (!save){
                 throw new CustomException("出现了问题");
