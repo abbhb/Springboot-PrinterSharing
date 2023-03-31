@@ -2,12 +2,16 @@ package com.qc.printers.controller;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.PrinterResult;
+import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.utils.JWTUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.websocket.server.PathParam;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
@@ -24,6 +29,7 @@ import static com.qc.printers.common.MyString.public_file;
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/printer")
 @Slf4j
+@Api("共享打印相关api")
 public class PrintController {
 
     private final PrintService printService;
@@ -35,6 +41,7 @@ public class PrintController {
 
     @CrossOrigin("*")
     @PostMapping("/uploadpdf")
+    @ApiOperation(value = "打印pdf")
     //后期可以传回token拿到用户信息
     public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
         log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={}",numberOfPrintedPages,printingDirection,numberOfPrintedPagesIndex,printBigValue);
@@ -122,8 +129,42 @@ public class PrintController {
         }
     }
 
+
+    /**
+     * 获取历史打印记录
+     * 需要分页
+     * 将管理员接口和用户接口分离 方便接入权限过滤器
+     * 此处没必要校验token 后期通过权限注解标注1需要管理员权限即可
+     * @param name 模糊查询 根据文件名筛选(user：id不为空就得带上user 的id)
+     * @param user 传回user的id只有管理员可以
+     * @param date 传回日期范围筛选 为后期优化预留
+     * @param pageNum 分页之当前页
+     * @param pageSize 分页之页面最大
+     * @return
+     */
+    @GetMapping("/getAllHistoryPrints")
+    @ApiOperation(value = "获取历史打印记录",notes = "传回type参数0为自己的，1为所有人历史记录：需要有管理员权限")
+    public R<PageData<PrinterResult>> getAllHistoryPrints(Integer pageNum, Integer pageSize, String name, String date , String user){
+
+        return null;
+    }
+    /**
+     * 获取历史打印记录
+     * 需要分页
+     * 将管理员接口和用户接口分离 方便接入权限过滤器
+     * @param name 模糊查询 根据文件名筛选(user：id不为空就得带上user 的id)
+     * @param date 传回日期范围筛选 为后期优化预留
+     * @param pageNum 分页之当前页
+     * @param pageSize 分页之页面最大
+     * @param token token里取userId看看权限
+     * @return
+     */
     @GetMapping("/getMyHistoryPrints")
-    public R<PrinterResult> getMyHistoryPrints(){
+    @ApiOperation(value = "获取历史打印记录")
+    public R<PageData<PrinterResult>> getMyHistoryPrints(Integer pageNum, Integer pageSize, String name, String date, @RequestHeader(value="Authorization", defaultValue = "") String token){
+        if (StringUtils.isEmpty(token)){
+            return R.error(Code.DEL_TOKEN,"登录异常");
+        }
         return null;
     }
 }

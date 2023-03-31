@@ -6,12 +6,10 @@ import com.qc.printers.common.JwtTokenInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import org.springframework.web.servlet.config.annotation.*;
 
 import java.util.List;
 
@@ -28,10 +26,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 解决swagger无法访问
-//        registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
-        // 解决swagger的js文件无法访问
-//        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-
+        registry.addResourceHandler("/swagger-ui/**").addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
 //        log.info("开始静态资源映射");
 //        registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");//此处classpath:/front/必须得在末尾加/，否则无法访问
 //        registry.addResourceHandler("/dist/**").addResourceLocations("classpath:/dist/");
@@ -47,7 +42,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         ir.addPathPatterns("/**");
 
         // 不拦截路径，如：注册、登录、忘记密码等
-        ir.excludePathPatterns("/user/login","/user/logout");//可以直接逗号往后加
+        ir.excludePathPatterns("/user/login","/user/logout","/swagger-ui/**");//可以直接逗号往后加
     }
     /**
      * 扩展mvc框架的消息转换器
@@ -62,5 +57,9 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         //将上面的消息转换器对象追加到mvc框架的转换器集合中
         converters.add(0,messageConverter);
     }
-
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addRedirectViewController("/swagger-ui", "/swagger-ui/index.html") .setStatusCode(HttpStatus.TEMPORARY_REDIRECT);
+        super.addViewControllers(registry);
+    }
 }

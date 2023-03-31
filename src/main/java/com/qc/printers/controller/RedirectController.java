@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.service.RedirectService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/redirect")
+@Api("第三方认证回调接口")
 @Slf4j
 public class RedirectController {
     private final RedirectService redirectService;
@@ -24,6 +27,7 @@ public class RedirectController {
 
 
     @GetMapping("/en")
+    @ApiOperation(value = "enroom回调api")
     public R<UserResult> enRedirect(String code){
         //直接返回user下的login
         log.info("code = {}",code);
@@ -34,6 +38,7 @@ public class RedirectController {
     }
 
     @PostMapping("/firsten")
+    @ApiOperation(value = "首次通过en认证的账号本地化")
     public R<UserResult> firstEN(@RequestBody Map<String,Object> data){
         //直接返回user下的login
         log.info("data = {}",data);

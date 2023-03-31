@@ -14,6 +14,8 @@ import com.qc.printers.service.CommonService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.ParamsCalibration;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +26,7 @@ import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/user")
-
+@Api("和用户相关的接口")
 @Slf4j
 public class UserController {
     private final UserService userService;
@@ -37,6 +39,7 @@ public class UserController {
 
 
     @PostMapping("/login")
+    @ApiOperation(value = "登录",notes = "type:0账密登录 type:1邮箱登录")
     public R<UserResult> login(@RequestBody Map<String, Object> user){
         String username = (String) user.get("username");
         String password = (String) user.get("password");
@@ -52,6 +55,7 @@ public class UserController {
 
     }
     @NeedToken
+    @ApiOperation(value = "获取邮箱验证码",notes = "验证邮箱是不是本人")
     @PostMapping("/createemailcode")
     public R<String> createEmailCode(@RequestBody Map<String, Object> email,@RequestHeader(value="Authorization", defaultValue = "") String token){
         System.out.println("email = " + email);
@@ -64,6 +68,7 @@ public class UserController {
     }
     @NeedToken
     @PostMapping("/emailwithuser")
+    @ApiOperation(value = "用户绑定邮箱")
     public R<String> emailWithUser(@RequestBody Map<String, Object> email,@RequestHeader(value="Authorization", defaultValue = "") String token){
         System.out.println("email = " + email);
         String emails = (String) email.get("email");
@@ -72,6 +77,7 @@ public class UserController {
     }
 
     @PostMapping("/create")
+    @ApiOperation(value = "注册",notes = "通过此接口注册只能注册普通用户")
     public R<String> create(@RequestBody User user){
         System.out.println("user = " + user);
         return userService.createUser(user,0L);
@@ -80,6 +86,7 @@ public class UserController {
 
     @NeedToken
     @PostMapping("/add")
+    @ApiOperation(value = "添加用户",notes = "如果是管理员权限可以添加高权限用户")
     public R<String> add(@RequestBody User user,@RequestHeader(value="Authorization", defaultValue = "") String token){
         System.out.println("user = " + user);
 //        String username = (String) user.get("username");
@@ -107,11 +114,13 @@ public class UserController {
 
     @NeedToken
     @PostMapping("/logout")
+    @ApiOperation(value = "注销",notes = "清掉redis的状态")
     public R<UserResult> logout(@RequestHeader(value="Authorization", defaultValue = "") String token){
         return userService.logout(token);
     }
 
     @PostMapping("/loginbytoken")
+    @ApiOperation(value = "token校验",notes = "没过期就等效登录")
     public R<UserResult> loginByToken(@RequestHeader(value="Authorization", defaultValue = "") String token){
         return userService.loginByToken(token);
     }
@@ -126,6 +135,7 @@ public class UserController {
      */
     @NeedToken
     @GetMapping("/get")
+    @ApiOperation(value = "获取用户列表",notes = "只给管理员返回")
     public R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,@RequestHeader(value="userId", defaultValue = "") Long userId){
         log.info("pageNum = {},pageSize = {},name = {},userId={}",pageNum,pageSize,name,userId);
         return userService.getUserList(pageNum,pageSize,name,userId);
@@ -138,12 +148,14 @@ public class UserController {
      * @return
      */
     @GetMapping("/hasUserName")
+    @ApiOperation(value = "判断用户名是否重复",notes = "注册的时候不断校验用户名是否重复")
     public R<String> hasUserName(String username){
         return userService.hasUserName(username);
     }
 
     @NeedToken
     @DeleteMapping("/delete")
+    @ApiOperation(value = "删除用户")
     public R<String> deleteUsers(String id,@RequestHeader(value="Authorization", defaultValue = "") String token){
         log.info("id = {}",id);
         if (StringUtils.isEmpty(id)){
@@ -165,6 +177,7 @@ public class UserController {
 
     @NeedToken
     @PutMapping("/updatauserstatus")
+    @ApiOperation(value = "更新用户状态",notes = "用于封禁账号")
     public R<String> updataUserStatus(@RequestHeader(value="Authorization", defaultValue = "") String token, @RequestBody Map<String,Object> user){
         if (StringUtils.isEmpty((String) user.get("id"))){
             return R.error("无操作对象");
@@ -198,6 +211,7 @@ public class UserController {
      */
     @NeedToken
     @PutMapping("/updataforuser")
+    @ApiOperation(value = "更新用户信息")
     public R<UserResult> updataForUser(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody User user){
         log.info("user = {}", user);
 
@@ -242,6 +256,7 @@ public class UserController {
 
     @NeedToken
     @PutMapping("/changepassword")
+    @ApiOperation(value = "更改用户密码")
     public R<UserResult> changePassword(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> user){
         System.out.println("user = " + user);
         String id = (String) user.get("id");
@@ -254,6 +269,7 @@ public class UserController {
 
     @NeedToken
     @PostMapping("/updataemployee")
+    @ApiOperation(value = "和上面方法重复",notes = "暂时没判断是否可以删除")
     public R<String> updataEmployee(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> employee){
 //        String userId = (String) employee.get("userId");//因为雪花算法，所以ID来回传递使用字符串,传回Service前转会Long
         // caozuoId//操作者id

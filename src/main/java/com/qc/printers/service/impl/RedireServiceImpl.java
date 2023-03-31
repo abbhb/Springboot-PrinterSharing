@@ -207,6 +207,7 @@ public class RedireServiceImpl implements RedirectService {
             if (!update){
                 throw new CustomException("trLoginEnService:err");
             }
+
             String uuid = RandomName.getUUID();//uuid作为key
             User ones = userService.getById(user.getId());
             String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
