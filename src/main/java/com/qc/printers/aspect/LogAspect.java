@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.qc.printers.common.NeedToken;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.LogMapper;
 import com.qc.printers.pojo.entity.Log;
@@ -39,7 +39,7 @@ public class LogAspect {
     /**
      * 设置操作日志切入点   在注解的位置切入代码
      */
-    @Pointcut("@annotation(com.qc.printers.common.NeedToken)")
+    @Pointcut("@annotation(com.qc.printers.common.annotation.NeedToken)")
     public void operLogPoinCut() {
     }
 

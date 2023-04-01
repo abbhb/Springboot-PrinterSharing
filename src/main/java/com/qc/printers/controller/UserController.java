@@ -4,8 +4,9 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.NeedToken;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.ToEmail;
@@ -134,6 +135,7 @@ public class UserController {
      * @return
      */
     @NeedToken
+    @PermissionCheck("1")
     @GetMapping("/get")
     @ApiOperation(value = "获取用户列表",notes = "只给管理员返回")
     public R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,@RequestHeader(value="userId", defaultValue = "") Long userId){
@@ -154,6 +156,7 @@ public class UserController {
     }
 
     @NeedToken
+    @PermissionCheck("1")
     @DeleteMapping("/delete")
     @ApiOperation(value = "删除用户")
     public R<String> deleteUsers(String id,@RequestHeader(value="Authorization", defaultValue = "") String token){
@@ -176,6 +179,7 @@ public class UserController {
     }
 
     @NeedToken
+    @PermissionCheck("1")
     @PutMapping("/updatauserstatus")
     @ApiOperation(value = "更新用户状态",notes = "用于封禁账号")
     public R<String> updataUserStatus(@RequestHeader(value="Authorization", defaultValue = "") String token, @RequestBody Map<String,Object> user){
@@ -204,15 +208,16 @@ public class UserController {
     }
 
     /**
-     * 更新操作
-     * @param token
+     * 更新操作(admin)
+     * 独立掉 用户自己更新信息方便加权限注解
      * @param user
      * @return
      */
     @NeedToken
+    @PermissionCheck("1")
     @PutMapping("/updataforuser")
     @ApiOperation(value = "更新用户信息")
-    public R<UserResult> updataForUser(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody User user){
+    public R<UserResult> updataForUser(@RequestBody User user){
         log.info("user = {}", user);
 
         if (user.getId()==null){
@@ -238,21 +243,48 @@ public class UserController {
         if (user.getPermission()==null){
             return R.error("更新失败");
         }
-
-        try {
-            DecodedJWT decodedJWT = JWTUtil.deToken(token);
-            Claim id = decodedJWT.getClaim("id");
-            Long userId = Long.valueOf(id.asString());
-            if (userId==null){
-                return R.error("更新失败");
-            }
-            return userService.updataForUser(user,userId);
-        }catch (Exception exception){
-            throw new CustomException("更新失败");
-        }
-
+        return userService.updataForUser(user);
     }
 
+
+    /**
+     * 更新操作(user)
+     * 此Api只允许更新自己的信息
+     * 独立掉 用户自己更新信息方便加权限注解
+     * @param user
+     * @return
+     */
+    @NeedToken
+    @PutMapping("/updataforuserself")
+    @ApiOperation(value = "更新用户信息",notes = "此Api只允许更新自己的信息")
+    public R<UserResult> updataForUserSelf(@RequestBody User user){
+        log.info("user = {}", user);
+
+        if (user.getId()==null){
+            return R.error("更新失败");
+        }
+        if (user.getUsername()==null){
+            return R.error("更新失败");
+        }
+        if (user.getName()==null){
+            return R.error("更新失败");
+        }
+        if (user.getSex()==null){
+            return R.error("更新失败");
+        }if (user.getStudentId()==null){
+            return R.error("更新失败");
+        }
+        if (user.getPhone()==null){
+            return R.error("更新失败");
+        }
+        if (user.getStatus()==null){
+            return R.error("更新失败");
+        }
+        if (user.getPermission()==null){
+            return R.error("更新失败");
+        }
+        return userService.updataForUserSelf(user);
+    }
 
     @NeedToken
     @PutMapping("/changepassword")
@@ -267,24 +299,24 @@ public class UserController {
         return userService.changePassword(id,username,password,newpassword,checknewpassword);
     }
 
-    @NeedToken
-    @PostMapping("/updataemployee")
-    @ApiOperation(value = "和上面方法重复",notes = "暂时没判断是否可以删除")
-    public R<String> updataEmployee(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> employee){
-//        String userId = (String) employee.get("userId");//因为雪花算法，所以ID来回传递使用字符串,传回Service前转会Long
-        // caozuoId//操作者id
-//        return userService.deleteEmployee(userId,caozuoId,token);
-        // return userService.updataEmployee(caozuoId,)
-        log.info(employee.toString());
-        String name = (String) employee.get("name");
-
-        String username = (String) employee.get("username");
-        String phone = (String) employee.get("phone");
-        String idNumber = (String) employee.get("idNumber");
-        String status = (String) employee.get("status");
-        String grouping = (String) employee.get("grouping");
-        String sex = (String) employee.get("sex");
-        String userid = (String) employee.get("userid");
-        return userService.updataUser(userid,name,username,phone,idNumber,status,grouping,sex,token);
-    }
+//    @NeedToken
+//    @PostMapping("/updataemployee")
+//    @ApiOperation(value = "和上面方法重复",notes = "暂时没判断是否可以删除")
+//    public R<String> updataEmployee(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> employee){
+////        String userId = (String) employee.get("userId");//因为雪花算法，所以ID来回传递使用字符串,传回Service前转会Long
+//        // caozuoId//操作者id
+////        return userService.deleteEmployee(userId,caozuoId,token);
+//        // return userService.updataEmployee(caozuoId,)
+//        log.info(employee.toString());
+//        String name = (String) employee.get("name");
+//
+//        String username = (String) employee.get("username");
+//        String phone = (String) employee.get("phone");
+//        String idNumber = (String) employee.get("idNumber");
+//        String status = (String) employee.get("status");
+//        String grouping = (String) employee.get("grouping");
+//        String sex = (String) employee.get("sex");
+//        String userid = (String) employee.get("userid");
+//        return userService.updataUser(userid,name,username,phone,idNumber,status,grouping,sex,token);
+//    }
 }

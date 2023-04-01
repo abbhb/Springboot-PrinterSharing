@@ -1,7 +1,8 @@
 package com.qc.printers.controller;
 
-import com.qc.printers.common.NeedToken;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.service.CommonService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -22,6 +23,7 @@ public class CommonController {
     private CommonService commonService;
     @CrossOrigin("*")
     @NeedToken
+    @PermissionCheck("2")
     @PostMapping("/uploadimage")
     @ApiOperation("上传图像到minio上，返回url,启用了跨域")
     public R<String> uploadImage(MultipartFile file){

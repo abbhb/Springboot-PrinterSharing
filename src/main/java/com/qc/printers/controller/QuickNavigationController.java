@@ -3,8 +3,9 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.NeedToken;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.QuickNavigationCategorizeResult;
 import com.qc.printers.pojo.QuickNavigationItemResult;
 import com.qc.printers.pojo.QuickNavigationResult;
@@ -16,6 +17,8 @@ import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;
 import com.qc.printers.utils.JWTUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,7 @@ import java.util.List;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/quicknavigation")
+@Api("导航页相关接口")
 @Slf4j
 public class QuickNavigationController {
 
@@ -43,6 +47,7 @@ public class QuickNavigationController {
 
     @NeedToken
     @GetMapping("/list")
+    @ApiOperation("返回可以展导航页内容")
     //后期可以传回token拿到用户信息
     public R<List<QuickNavigationResult>> list(@RequestHeader(value="Authorization", defaultValue = "") String token) {
         if (StringUtils.isEmpty(token)){
@@ -61,11 +66,13 @@ public class QuickNavigationController {
     }
 
     /**
-     * 导航分类管理系统
+     * 导航分类管理系统\管理员
      * @return
      */
     @NeedToken
+    @PermissionCheck("1")
     @GetMapping("/listnavfenlei")
+    @ApiOperation("导航分类管理系统")
     //后期可以传回token拿到用户信息
     public R<PageData<QuickNavigationCategorizeResult>> listNavFenLei(Integer pageNum, Integer pageSize, String name) {
         return quickNavigationCategorizeService.listNavFenLei(pageNum,pageSize,name);
@@ -77,6 +84,9 @@ public class QuickNavigationController {
      * @param quickNavigationItem
      * @return
      */
+    @ApiOperation("创建导航内容")
+    @NeedToken
+    @PermissionCheck("1")
     @PostMapping("/createItem")
     public R<String> createItem(@RequestBody QuickNavigationItem quickNavigationItem){
 //        System.out.println("quickNavigationItem = " + quickNavigationItem);
@@ -84,11 +94,15 @@ public class QuickNavigationController {
         return quickNavigationItemService.createNavItem(quickNavigationItem);
 
     }
+
     /**
      * 权限等用注解后期实现,通过过滤器
      * @param quickNavigationCategorize
      * @return
      */
+    @ApiOperation("创建导航分类")
+    @NeedToken
+    @PermissionCheck("1")
     @PostMapping("/createCategorize")
     public R<String> createCategorize(@RequestBody QuickNavigationCategorize quickNavigationCategorize){
 //        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
@@ -102,6 +116,7 @@ public class QuickNavigationController {
      * @return
      */
     @NeedToken
+    @ApiOperation("返回导航分类item")
     @GetMapping("/listnavfenleiitem")
     //后期可以传回token拿到用户信息
     public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name,String selectCate) {
@@ -110,6 +125,9 @@ public class QuickNavigationController {
 
     }
 
+    /**
+     * @return 返回分类选择的列表
+     */
     @NeedToken
     @GetMapping("/getCategorizeSelectOptionsList")
     //后期可以传回token拿到用户信息
@@ -121,6 +139,7 @@ public class QuickNavigationController {
 
 
     @NeedToken
+    @PermissionCheck("1")
     @PutMapping("/updataforquicknavigationcategorize")
     public R<String> updataForQuickNavigationCategorize(@RequestBody QuickNavigationCategorize quickNavigation){
 
@@ -134,6 +153,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
+    @PermissionCheck("1")
     @PutMapping("/updataforquicknavigationitem")
     public R<String> updataForQuickNavigationItem(@RequestBody QuickNavigationItem quickNavigationItem){
 
@@ -164,6 +184,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
+    @PermissionCheck("1")
     @DeleteMapping("/deleteCategorize")
     public R<String> deleteNavigationCategorize(String id){
         log.info("id = {}",id);
@@ -174,6 +195,7 @@ public class QuickNavigationController {
 
     }
     @NeedToken
+    @PermissionCheck("1")
     @DeleteMapping("/deleteItem")
     public R<String> deleteNavigationItem(String id){
         log.info("id = {}",id);

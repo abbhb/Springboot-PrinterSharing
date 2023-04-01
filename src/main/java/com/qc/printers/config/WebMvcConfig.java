@@ -2,7 +2,9 @@ package com.qc.printers.config;
 
 
 import com.qc.printers.common.JacksonObjectMapper;
-import com.qc.printers.common.JwtTokenInterceptor;
+import com.qc.printers.common.interceptor.JwtTokenInterceptor;
+import com.qc.printers.common.interceptor.LoginInterceptor;
+import com.qc.printers.common.interceptor.PermissionInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,12 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
     @Autowired
     private JwtTokenInterceptor jwtTokenInterceptor;
+
+    @Autowired
+    private LoginInterceptor loginInterceptor;
+
+    @Autowired
+    private PermissionInterceptor permissionInterceptor;
     /**
      * 设置静态资源映射
      * @param registry
@@ -35,14 +43,13 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册拦截规则
-        InterceptorRegistration ir = registry.addInterceptor(jwtTokenInterceptor);
+        registry.addInterceptor(jwtTokenInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(1);
+        registry.addInterceptor(loginInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(2);
+        registry.addInterceptor(permissionInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(3);
         // 拦截路径，员工请求的路径都拦截
-//        ir.addPathPatterns("/employee/**");
-//        ir.addPathPatterns("/store/**");
-        ir.addPathPatterns("/**");
-
+        //ir.addPathPatterns("/employee/**");
+        //ir.addPathPatterns("/store/**");
         // 不拦截路径，如：注册、登录、忘记密码等
-        ir.excludePathPatterns("/user/login","/user/logout","/swagger-ui/**");//可以直接逗号往后加
     }
     /**
      * 扩展mvc框架的消息转换器

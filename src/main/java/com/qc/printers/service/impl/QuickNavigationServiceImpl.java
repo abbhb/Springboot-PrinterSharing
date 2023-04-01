@@ -72,10 +72,8 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setType(quickNavigationItem.getType());
                 //markdown
                 quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(),userById.getPermission()));
-
                 quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
                 QuickNavigationCategorize quickNavigationCategorizeServiceById = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
-                log.info("quickNavigationCategorizeServiceById = {}",quickNavigationCategorizeServiceById);
                 if (quickNavigationCategorizeServiceById==null){
                     throw new CustomException("运行异常");
                 }

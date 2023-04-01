@@ -19,6 +19,7 @@ import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.PWDMD5;
 import com.qc.printers.utils.RandomName;
+import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -242,8 +243,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return R.error("无操作对象");
     }
 
+    @Transactional
     @Override
-    public R<UserResult> updataForUser(User user, Long userId) {
+    public R<UserResult> updataForUser(User user) {
         if (user.getId()==null){
             return R.error("更新失败");
         }
@@ -261,21 +263,58 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user.getPhone()==null){
             return R.error("更新失败");
         }
-        if (userId==null){
-            return R.error("更新失败");
-        }
+
         if (user.getStudentId()>999999999999L){
             return R.error("不能超过12位学号");
         }
         if (user.getId().equals(1L)){
             return R.error("禁止操作admin");
         }
-        User byId = super.getById(userId);
-        if (byId==null){
-            throw new CustomException("id");
+
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId,user.getId());
+        lambdaUpdateWrapper.set(User::getName,user.getName());
+        lambdaUpdateWrapper.set(User::getStudentId,user.getStudentId());
+        lambdaUpdateWrapper.set(User::getUsername,user.getUsername());
+        lambdaUpdateWrapper.set(User::getSex,user.getSex());
+        lambdaUpdateWrapper.set(User::getPermission,user.getPermission());
+        lambdaUpdateWrapper.set(User::getStatus,user.getStatus());
+        lambdaUpdateWrapper.set(User::getPhone,user.getPhone());
+        boolean update = super.update(lambdaUpdateWrapper);
+        if (update){
+            return R.success("更新成功");
         }
-        if (!byId.getPermission().equals(user.getPermission())){
-            throw new CustomException("getPermission");
+        return R.error("err");
+    }
+    @Transactional
+    @Override
+    public R<UserResult> updataForUserSelf(User user) {
+        if (user.getId()==null){
+            return R.error("更新失败");
+        }
+        if (user.getUsername()==null){
+            return R.error("更新失败");
+        }
+        if (user.getName()==null){
+            return R.error("更新失败");
+        }
+        if (user.getSex()==null){
+            return R.error("更新失败");
+        }if (user.getStudentId()==null){
+            return R.error("更新失败");
+        }
+        if (user.getPhone()==null){
+            return R.error("更新失败");
+        }
+        if (user.getStudentId()>999999999999L){
+            return R.error("不能超过12位学号");
+        }
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            throw new CustomException("缺少必要信息");
+        }
+        if (!user.getId().equals(currentUser.getId())){
+            throw new CustomException("你没权限更新别人账号信息");
         }
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId,user.getId());

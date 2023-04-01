@@ -1,4 +1,4 @@
-package com.qc.printers.common;
+package com.qc.printers.common.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

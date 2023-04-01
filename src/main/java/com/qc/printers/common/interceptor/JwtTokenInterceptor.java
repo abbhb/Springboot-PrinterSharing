@@ -1,16 +1,18 @@
-package com.qc.printers.common;
+package com.qc.printers.common.interceptor;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.qc.printers.common.Code;
+import com.qc.printers.common.CustomException;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.service.IStringRedisService;
 import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +20,7 @@ import java.lang.reflect.Method;
 
 @Slf4j
 @Component
-public class JwtTokenInterceptor extends HandlerInterceptorAdapter {
+public class JwtTokenInterceptor implements HandlerInterceptor {
 
     @Autowired
     private IStringRedisService iStringRedisService;//这个是针对字符串的存储，若是存对象，请使用redisTemplate
@@ -39,34 +41,25 @@ public class JwtTokenInterceptor extends HandlerInterceptorAdapter {
         if (method.getAnnotation(NeedToken.class) != null){
             //token校验
             String authorization =  request.getHeader("Authorization");
-            String id =  request.getHeader("userId");//此处id为字符串，正常携带，双重判断
-
-            //            System.out.println("authorization = " + authorization);
-            //            if(redisOperator)
+//            String id =  request.getHeader("userId");//此处id为字符串，正常携带，双重判断
             if (authorization==null){
                 response.setStatus(Code.DEL_TOKEN);
-                return false;
+                throw new CustomException("登录err");
             }
-            if (id == null){
-                response.setStatus(Code.DEL_TOKEN);
-                return false;
+            DecodedJWT decodedJWT = null;
+            Claim uuid = null;
+            Claim cid = null;
+            try {
+                decodedJWT = JWTUtil.deToken(authorization);
+                uuid = decodedJWT.getClaim("uuid");
+                cid = decodedJWT.getClaim("id");
+            }catch (Exception e){
+                throw new CustomException("登录err");
             }
-            //            System.out.println("authorization = " + authorization);//将id直接传回
-
-            DecodedJWT decodedJWT = JWTUtil.deToken(authorization);
-            Claim uuid = decodedJWT.getClaim("uuid");
-            Claim cid = decodedJWT.getClaim("id");
-            //            log.info(expiresAt.toString());
             if (cid==null){
                 throw new CustomException("不安全");//后期加上安全处理
             }
-            if (!Long.valueOf(cid.asString()).equals(Long.valueOf(id))){
-                throw new CustomException("不安全");//后期加上安全处理
-            }
-
             Long tokenTTL = iStringRedisService.getTokenTTL(uuid.asString());
-
-
             if (tokenTTL==null){
                 log.info("tokenTTL==null");
                 response.setStatus(Code.DEL_TOKEN);
@@ -80,14 +73,15 @@ public class JwtTokenInterceptor extends HandlerInterceptorAdapter {
                 }else {
                     log.info("tokenTTL==-2");
                     response.setStatus(Code.DEL_TOKEN);
-                    return false;
+                    throw new CustomException("登录err");
                 }
-                if (id!=null||authorization!=null){
+                if (authorization!=null){
                     //token存在，放行
+
                 }else {
                     log.info("token拦截器:1");
                     response.setStatus(Code.DEL_TOKEN);
-                    return false;
+                    throw new CustomException("登录err");
                 }
             }
             return true;
@@ -96,5 +90,7 @@ public class JwtTokenInterceptor extends HandlerInterceptorAdapter {
 
 
     }
+
+
 
 }

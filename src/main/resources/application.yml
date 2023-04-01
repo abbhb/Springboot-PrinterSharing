@@ -34,7 +34,9 @@ mybatis-plus:
   configuration:
     #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
     map-underscore-to-camel-case: true
+    #上边这个开启sql日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
   global-config:
     #雪花算法
     db-config:

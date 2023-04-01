@@ -2,12 +2,12 @@ package com.qc.printers.controller;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PrinterResult;
 import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.utils.JWTUtil;
 import io.swagger.annotations.Api;
@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.websocket.server.PathParam;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
@@ -41,6 +40,7 @@ public class PrintController {
 
     @CrossOrigin("*")
     @PostMapping("/uploadpdf")
+    @NeedToken
     @ApiOperation(value = "打印pdf")
     //后期可以传回token拿到用户信息
     public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
@@ -143,6 +143,8 @@ public class PrintController {
      * @return
      */
     @GetMapping("/getAllHistoryPrints")
+    @NeedToken
+    @PermissionCheck("1")
     @ApiOperation(value = "获取历史打印记录",notes = "传回type参数0为自己的，1为所有人历史记录：需要有管理员权限")
     public R<PageData<PrinterResult>> getAllHistoryPrints(Integer pageNum, Integer pageSize, String name, String date , String user){
 
@@ -160,11 +162,10 @@ public class PrintController {
      * @return
      */
     @GetMapping("/getMyHistoryPrints")
-    @ApiOperation(value = "获取历史打印记录")
+    @ApiOperation(value = "获取历史打印记录",notes = "因为没有token过不了needtoken，所以没必要再次校验token")
+    @NeedToken
     public R<PageData<PrinterResult>> getMyHistoryPrints(Integer pageNum, Integer pageSize, String name, String date, @RequestHeader(value="Authorization", defaultValue = "") String token){
-        if (StringUtils.isEmpty(token)){
-            return R.error(Code.DEL_TOKEN,"登录异常");
-        }
+
         return null;
     }
 }

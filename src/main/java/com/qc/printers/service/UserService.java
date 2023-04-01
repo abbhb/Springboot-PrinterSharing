@@ -19,7 +19,9 @@ public interface UserService extends IService<User> {
 
     R<String> updataUserStatus(String id,String status, Long userId);
 
-    R<UserResult> updataForUser(User user, Long userId);
+    R<UserResult> updataForUser(User user);
+
+    R<UserResult> updataForUserSelf(User user);
 
     R<UserResult> changePassword(String id, String username, String password, String newpassword, String checknewpassword);
 

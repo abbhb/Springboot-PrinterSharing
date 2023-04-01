@@ -6,9 +6,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class JWTUtil {
     private final static String secret_key = "reggit20230113.FfG!D3a2AcfrF.2u0C1";
     /**
@@ -54,10 +56,10 @@ public class JWTUtil {
             jwt = verifier.verify(token);
         } catch (JWTVerificationException exception) {
             // Invalid signature/claims
-            exception.printStackTrace();
+            log.error(exception.getMessage());
         } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return jwt;
     }
