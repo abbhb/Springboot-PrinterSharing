@@ -309,13 +309,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user.getStudentId()>999999999999L){
             return R.error("不能超过12位学号");
         }
-        User currentUser = ThreadLocalUtil.getCurrentUser();
-        if (currentUser==null){
-            throw new CustomException("缺少必要信息");
-        }
-        if (!user.getId().equals(currentUser.getId())){
-            throw new CustomException("你没权限更新别人账号信息");
-        }
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId,user.getId());
         lambdaUpdateWrapper.set(User::getName,user.getName());

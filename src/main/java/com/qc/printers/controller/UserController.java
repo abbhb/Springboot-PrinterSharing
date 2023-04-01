@@ -257,7 +257,7 @@ public class UserController {
     @NeedToken
     @PutMapping("/updataforuserself")
     @ApiOperation(value = "更新用户信息",notes = "此Api只允许更新自己的信息")
-    public R<UserResult> updataForUserSelf(@RequestBody User user){
+    public R<UserResult> updataForUserSelf(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody User user){
         log.info("user = {}", user);
 
         if (user.getId()==null){
@@ -283,6 +283,12 @@ public class UserController {
         if (user.getPermission()==null){
             return R.error("更新失败");
         }
+        DecodedJWT decodedJWT = JWTUtil.deToken(token);
+        Claim id = decodedJWT.getClaim("id");
+        if (id==null){
+            return R.error("缺少关键信息");
+        }
+        user.setId(Long.valueOf(id.asString()));
         return userService.updataForUserSelf(user);
     }
 

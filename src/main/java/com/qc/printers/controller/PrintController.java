@@ -9,6 +9,7 @@ import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PrinterResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.service.PrintService;
+import com.qc.printers.service.PrinterService;
 import com.qc.printers.utils.JWTUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,9 +34,12 @@ public class PrintController {
 
     private final PrintService printService;
 
+    private final PrinterService printerService;
+
     @Autowired
-    public PrintController(PrintService printService) {
+    public PrintController(PrintService printService, PrinterService printerService) {
         this.printService = printService;
+        this.printerService = printerService;
     }
 
     @CrossOrigin("*")
@@ -147,7 +151,12 @@ public class PrintController {
     @PermissionCheck("1")
     @ApiOperation(value = "获取历史打印记录",notes = "传回type参数0为自己的，1为所有人历史记录：需要有管理员权限")
     public R<PageData<PrinterResult>> getAllHistoryPrints(Integer pageNum, Integer pageSize, String name, String date , String user){
-
+        if (pageNum==null){
+            return R.error("传参错误");
+        }
+        if (pageSize==null){
+            return R.error("传参错误");
+        }
         return null;
     }
     /**
@@ -158,14 +167,19 @@ public class PrintController {
      * @param date 传回日期范围筛选 为后期优化预留
      * @param pageNum 分页之当前页
      * @param pageSize 分页之页面最大
-     * @param token token里取userId看看权限
      * @return
      */
     @GetMapping("/getMyHistoryPrints")
-    @ApiOperation(value = "获取历史打印记录",notes = "因为没有token过不了needtoken，所以没必要再次校验token")
+    @ApiOperation(value = "获取本人历史打印记录",notes = "因为没有token过不了needtoken，所以没必要再次校验token")
     @NeedToken
-    public R<PageData<PrinterResult>> getMyHistoryPrints(Integer pageNum, Integer pageSize, String name, String date, @RequestHeader(value="Authorization", defaultValue = "") String token){
+    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestHeader(value="Authorization", defaultValue = "") String token,Integer pageNum, Integer pageSize, String name, String date){
+        if (pageNum==null){
+            return R.error("传参错误");
+        }
+        if (pageSize==null){
+            return R.error("传参错误");
+        }
 
-        return null;
+        return printerService.listPrinter(pageNum,pageSize,token,name,date);
     }
 }
