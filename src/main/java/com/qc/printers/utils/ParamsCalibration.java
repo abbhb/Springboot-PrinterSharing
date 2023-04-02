@@ -1,6 +1,7 @@
 package com.qc.printers.utils;
 
 import com.qc.printers.common.CustomException;
+import com.qc.printers.pojo.entity.Printer;
 
 /**
  * 参数校验工具类
@@ -40,5 +41,17 @@ public class ParamsCalibration {
         }else {
             return 0;
         }
+    }
+
+    public static Printer somePrinterParams(String oldName,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
+        Printer printer = new Printer();
+        printer.setName(oldName);
+        printer.setPrintingDirection(printingDirection);
+        printer.setNumberOfPrintedPages(numberOfPrintedPages);
+        printer.setPrintBigValue(printBigValue);
+        printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
+        printer.setCreateUser(userId);
+        printer.setIsDuplex(isDuplex);
+        return printer;
     }
 }

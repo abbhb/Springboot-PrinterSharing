@@ -9,6 +9,7 @@ import javax.print.DocFlavor;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.standard.Sides;
 import java.awt.print.Book;
 import java.awt.print.PageFormat;
 import java.awt.print.Paper;
@@ -18,12 +19,12 @@ import java.io.File;
 @Slf4j
 public class PdfPrintUtil {
     /**
-     * @param fileUrl		文件地址
+     * @param fileUrl        文件地址
      * @param printService   打印机名称   知道的可以直接指定
      * @param jobName  文件名
      * @param pageNum  页码
      */
-    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue) {
+    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue,Integer isDUPLEX) {
         File file = new File(fileUrl);
         try {
             PDDocument document = PDDocument.load(file);
@@ -76,15 +77,26 @@ public class PdfPrintUtil {
             job.setPageable(book);
 
 
+
             //设置打印份数
             if (numberOfPrintedPages==null){
                 numberOfPrintedPages = 1;
             }
+
             job.setCopies(numberOfPrintedPages);
             log.info("numberOfPrintedPages = {}",numberOfPrintedPages);
             //调用isCancelled()方法获取打印状态,如果打印被取消,返回true,否则返回false。
             System.out.println("打印是否被取消："+job.isCancelled());
-            job.print();
+            if (isDUPLEX.equals(1)){
+                //双面打印
+                HashPrintRequestAttributeSet hashPrintRequestAttributeSet = new HashPrintRequestAttributeSet();
+                hashPrintRequestAttributeSet.add(Sides.DUPLEX);
+                job.print(hashPrintRequestAttributeSet);
+            }else {
+                job.print();
+            }
+
+
         }  catch (Exception e) {
             e.printStackTrace();
         }

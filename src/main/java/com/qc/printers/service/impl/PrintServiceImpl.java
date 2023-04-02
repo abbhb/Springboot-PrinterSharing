@@ -6,6 +6,7 @@ import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.utils.PdfPrintUtil;
 import com.qc.printers.utils.WordPrintUtil;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
 import static com.qc.printers.utils.ParamsCalibration.checkBeforePrint;
+import static com.qc.printers.utils.ParamsCalibration.somePrinterParams;
 
 @Service
 @Slf4j
@@ -32,7 +34,7 @@ public class PrintServiceImpl implements PrintService {
     
     @Transactional
     @Override
-    public boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Long userId) {
+    public boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, @ApiParam("是否双面打印") Integer isDuplex, Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
         if (numberOfPrintedPagesIndex.contains("-")){
             String[] split = numberOfPrintedPagesIndex.split("-");
@@ -46,33 +48,24 @@ public class PrintServiceImpl implements PrintService {
 //            log.info("{}",pages);
             // 同文件多页 打印 就多次调用 printFile方法
             // i 为页码  当找不到时就停止打印了  ， 这里动态获取页码
-            if (numberOfPrintedPagesIndex.equals("all")) {
-                PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, pages, numberOfPrintedPages, printingDirection, printBigValue);
+            if (numberOfPrintedPagesIndex.equals("all")||numberOfPrintedPagesIndex.equals("")) {
+                PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, pages, numberOfPrintedPages, printingDirection, printBigValue,isDuplex);
                 try {
-                    Printer printer = new Printer();
-                    printer.setName(oldName);
-                    printer.setPrintingDirection(printingDirection);
-                    printer.setNumberOfPrintedPages(numberOfPrintedPages);
-                    printer.setPrintBigValue(printBigValue);
-                    printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
-                    printer.setCreateUser(userId);
-                    printerService.addPrinter(printer,newName);
+                    //打印记录-->后期升级为rabbitmq
+                    printerService.addPrinter(somePrinterParams(oldName, printingDirection, numberOfPrintedPages, printBigValue, numberOfPrintedPagesIndex,isDuplex ,userId),newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
                 }
                 return true;
             } else {
-                PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, Integer.parseInt(numberOfPrintedPagesIndex), numberOfPrintedPages, printingDirection, printBigValue);
+                if (numberOfPrintedPagesIndex.contains("-")){
+                    numberOfPrintedPagesIndex = numberOfPrintedPagesIndex.split("-")[1];
+                }
+                PdfPrintUtil.printFile(public_file + "\\" + newName, "Brother HL-2240D series", newName, Integer.parseInt(numberOfPrintedPagesIndex), numberOfPrintedPages, printingDirection, printBigValue,isDuplex);
                 try {
-                    Printer printer = new Printer();
-                    printer.setName(oldName);
-                    printer.setPrintingDirection(printingDirection);
-                    printer.setNumberOfPrintedPages(numberOfPrintedPages);
-                    printer.setPrintBigValue(printBigValue);
-                    printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
-                    printer.setCreateUser(userId);
-                    printerService.addPrinter(printer,newName);
+                    //打印记录
+                    printerService.addPrinter(somePrinterParams(oldName, printingDirection, numberOfPrintedPages, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId),newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
@@ -81,7 +74,7 @@ public class PrintServiceImpl implements PrintService {
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("捕获异常:{}", e.getMessage());
             return false;
         }
         
@@ -90,14 +83,14 @@ public class PrintServiceImpl implements PrintService {
     
     @Transactional
     @Override
-    public boolean printsForWord(String newName, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Long userId) {
+    public boolean printsForWord(String newName, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Integer isDuplex,Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
         try {
             String suffix = StringUtils.substringAfter(newName, ".");// 后缀
             String newNamePDF = UUID.randomUUID().toString() + ".pdf";
             WordPrintUtil.wordToPDF(public_file + "\\" + newName, public_file + "\\" + newNamePDF);
             // 后面就调用pdf打印就行
-            return printsForPDF(newNamePDF, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, userId);
+            return printsForPDF(newNamePDF, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

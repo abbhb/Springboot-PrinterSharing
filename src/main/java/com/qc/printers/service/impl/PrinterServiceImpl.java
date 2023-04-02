@@ -90,6 +90,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setName(printerItem1.getName());
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
+            printerResult.setIsDuplex(printerItem1.getIsDuplex());
 //            printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())); 自己的记录肯定是自己没必要
             printerResult.setNumberOfPrintedPages(printerItem1.getNumberOfPrintedPages());
             printerResult.setId(String.valueOf(printerItem1.getId()));

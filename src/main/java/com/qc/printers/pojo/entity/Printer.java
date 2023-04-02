@@ -52,5 +52,11 @@ public class Printer implements Serializable {
      */
     private Long createUser;
 
+    /**
+     * 单双面
+     * false单面 true 双面
+     */
+    private Integer isDuplex;
+
 
 }

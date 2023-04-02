@@ -48,4 +48,6 @@ public class PrinterResult implements Serializable {
      */
     private String createUser;
 
+    private Integer isDuplex;
+
 }

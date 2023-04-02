@@ -43,12 +43,12 @@ public class PrintController {
     }
 
     @CrossOrigin("*")
-    @PostMapping("/uploadpdf")
+    @PostMapping("/uploadPrint")
     @NeedToken
-    @ApiOperation(value = "打印pdf")
+    @ApiOperation(value = "打印通用接口")
     //后期可以传回token拿到用户信息
-    public R<String> fileupload(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
-        log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={}",numberOfPrintedPages,printingDirection,numberOfPrintedPagesIndex,printBigValue);
+    public R<String> uploadPrint(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@PathParam(value = "isDUPLEX") Integer isDuplex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
+        log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={},isDUPLEX={}",numberOfPrintedPages,printingDirection,numberOfPrintedPagesIndex,printBigValue,isDuplex);
 
         if (file==null){
             return R.error("异常");
@@ -110,14 +110,14 @@ public class PrintController {
             log.info("路径为:{}",folder+newName);
             //打印
             if (suffix.equals("pdf")){
-                boolean isPrintSuccess = printService.printsForPDF(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,userId);
+                boolean isPrintSuccess = printService.printsForPDF(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,userId);
 //                log.info("{}",isPrintSuccess);
                 if (isPrintSuccess){
                     return R.success("打印成功,请稍后!");
                 }
                 return R.error("打印失败");
             } else if (suffix.equals("docx")) {
-                boolean isPrintSuccess = printService.printsForWord(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,userId);
+                boolean isPrintSuccess = printService.printsForWord(newName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,userId);
                 if (isPrintSuccess){
                     return R.success("打印成功,请稍后!");
                 }
