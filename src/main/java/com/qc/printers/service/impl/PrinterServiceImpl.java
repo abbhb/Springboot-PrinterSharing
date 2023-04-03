@@ -5,21 +5,22 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.PrinterMapper;
+import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.QuickNavigationCategorizeResult;
+import com.qc.printers.pojo.UserResult;
+import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
-import com.qc.printers.pojo.entity.QuickNavigationCategorize;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.PrinterService;
+import com.qc.printers.service.UserService;
 import com.qc.printers.utils.FileMD5;
 import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,16 @@ import static com.qc.printers.common.MyString.public_file;
 @Service
 @Slf4j
 public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> implements PrinterService {
+
+    private final UserService userService;
+
+    private final UserMapper userMapper;
+
+    @Autowired
+    public PrinterServiceImpl(UserService userService, UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+    }
 
     @Transactional
     @Override
@@ -75,7 +86,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(Printer::getCreateUser,Long.valueOf(id.asString()));
-        lambdaQueryWrapper.eq(!StringUtils.isEmpty(name),Printer::getName,name);
+        lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
         //暂时不支持通过日期模糊查询
         Page page = super.page(pageInfo, lambdaQueryWrapper);
         if (page==null){
@@ -104,5 +115,80 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         pageData.setRecords(results);
         pageData.setMaxLimit(pageInfo.getMaxLimit());
         return R.success(pageData);
+    }
+
+    @Override
+    public R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user) {
+        if (pageNum==null){
+            return R.error("传参错误");
+        }
+        if (pageSize==null){
+            return R.error("传参错误");
+        }
+
+        Page pageInfo = new Page(pageNum,pageSize);
+        LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
+        lambdaQueryWrapper.eq(!StringUtils.isEmpty(user),Printer::getCreateUser,user);
+
+        //暂时不支持通过日期模糊查询
+        Page page = super.page(pageInfo, lambdaQueryWrapper);
+        if (page==null){
+            return R.error("啥也没有");
+        }
+        PageData<PrinterResult> pageData = new PageData<>();
+        List<PrinterResult> results = new ArrayList<>();
+        for (Object printerItem : pageInfo.getRecords()) {
+            Printer printerItem1 = (Printer) printerItem;
+
+            PrinterResult printerResult = new PrinterResult();
+            printerResult.setName(printerItem1.getName());
+            printerResult.setContentHash(printerItem1.getContentHash());
+            printerResult.setCreateTime(printerItem1.getCreateTime());
+            printerResult.setIsDuplex(printerItem1.getIsDuplex());
+            User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
+            if (user1==null){
+                printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())+"(用户信息已丢失)");
+            }else {
+                printerResult.setCreateUser(user1.getName());
+            }
+
+            printerResult.setNumberOfPrintedPages(printerItem1.getNumberOfPrintedPages());
+            printerResult.setId(String.valueOf(printerItem1.getId()));
+            results.add(printerResult);
+        }
+        pageData.setPages(pageInfo.getPages());
+        pageData.setTotal(pageInfo.getTotal());
+        pageData.setCountId(pageInfo.getCountId());
+        pageData.setCurrent(pageInfo.getCurrent());
+        pageData.setSize(pageInfo.getSize());
+        pageData.setRecords(results);
+        pageData.setMaxLimit(pageInfo.getMaxLimit());
+        return R.success(pageData);
+    }
+
+    @Override
+    public R<List<ValueLabelResult>> getAllUserPrinter() {
+        List<User> allUserIncludeDeleted = userMapper.getAllUserIncludeDeleted();
+        List<ValueLabelResult> valueLabelResults =new ArrayList<>();
+        if (valueLabelResults==null){
+            return R.error("空");
+        }
+        for (User user:
+                allUserIncludeDeleted) {
+            ValueLabelResult valueLabelResult = new ValueLabelResult(String.valueOf(user.getId()),user.getName());
+            valueLabelResults.add(valueLabelResult);
+        }
+        return R.success(valueLabelResults);
+    }
+
+    /**
+     * 耗时操作，定时任务在每天4：00执行一次
+     * @return
+     */
+    @Override
+    public R<List<UserResult>> getUserPrintTopList() {
+
+        return null;
     }
 }

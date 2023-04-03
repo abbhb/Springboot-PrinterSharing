@@ -50,4 +50,5 @@ public class PrinterResult implements Serializable {
 
     private Integer isDuplex;
 
+
 }

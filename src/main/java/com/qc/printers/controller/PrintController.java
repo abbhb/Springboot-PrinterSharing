@@ -7,6 +7,8 @@ import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PrinterResult;
+import com.qc.printers.pojo.UserResult;
+import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.websocket.server.PathParam;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import static com.qc.printers.common.MyString.public_file;
@@ -157,7 +160,22 @@ public class PrintController {
         if (pageSize==null){
             return R.error("传参错误");
         }
-        return null;
+        return printerService.listAllPrinter(pageNum,pageSize,name,user);
+    }
+    @GetMapping("/getAllUserPrinter")
+    @NeedToken
+    @PermissionCheck("1")
+    @ApiOperation(value = "获取所有打印者",notes = "没打印过的也会包括在内")
+    public R<List<ValueLabelResult>> getAllUserPrinter(){
+        return printerService.getAllUserPrinter();
+    }
+
+    @GetMapping("/getUserPrintTopList")
+    @NeedToken
+    @PermissionCheck("1")
+    @ApiOperation(value = "获取打印榜前10名用户",notes = "会排序好返回")
+    public R<List<UserResult>> getUserPrintTopList(){
+        return printerService.getUserPrintTopList();
     }
     /**
      * 获取历史打印记录

@@ -43,6 +43,7 @@ public class ParamsCalibration {
         }
     }
 
+
     public static Printer somePrinterParams(String oldName,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
         Printer printer = new Printer();
         printer.setName(oldName);
