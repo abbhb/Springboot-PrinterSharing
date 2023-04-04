@@ -121,6 +121,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
+            printerResult.setUrl(printerItem1.getUrl());
 //            printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())); 自己的记录肯定是自己没必要
             printerResult.setNumberOfPrintedPages(printerItem1.getNumberOfPrintedPages());
             printerResult.setId(String.valueOf(printerItem1.getId()));
@@ -165,6 +166,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
+            printerResult.setUrl(printerItem1.getUrl());
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){
                 printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())+"(用户信息已丢失)");
