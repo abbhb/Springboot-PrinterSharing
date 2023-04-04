@@ -44,9 +44,10 @@ public class ParamsCalibration {
     }
 
 
-    public static Printer somePrinterParams(String oldName,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
+    public static Printer somePrinterParams(String oldName,String url,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
         Printer printer = new Printer();
         printer.setName(oldName);
+        printer.setUrl(url);
         printer.setPrintingDirection(printingDirection);
         printer.setNumberOfPrintedPages(numberOfPrintedPages);
         printer.setPrintBigValue(printBigValue);

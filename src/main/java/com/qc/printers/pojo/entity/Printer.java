@@ -58,5 +58,8 @@ public class Printer implements Serializable {
      */
     private Integer isDuplex;
 
+    //文件地址
+    private String url;
+
 
 }

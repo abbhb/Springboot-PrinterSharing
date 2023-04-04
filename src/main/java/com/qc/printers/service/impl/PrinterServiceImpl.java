@@ -5,15 +5,16 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.PrinterMapper;
 import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.vo.CountTop10VO;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.FileMD5;
@@ -25,10 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.qc.printers.common.MyString.public_file;
 
 @Service
 @Slf4j
@@ -38,10 +41,13 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
 
     private final UserMapper userMapper;
 
+    private final PrinterMapper printerMapper;
+
     @Autowired
-    public PrinterServiceImpl(UserService userService, UserMapper userMapper) {
+    public PrinterServiceImpl(UserService userService, UserMapper userMapper, PrinterMapper printerMapper) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.printerMapper = printerMapper;
     }
 
     @Transactional
@@ -55,9 +61,12 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             return false;
         }
-        String fileUrl = public_file+"\\"+urlName;
+
+        InputStream inputStream = null;
         try {
-            printer.setContentHash(FileMD5.md5HashCode(fileUrl));
+            URL url = new URL(urlName);
+            inputStream = url.openStream();
+            printer.setContentHash(FileMD5.md5HashCode(inputStream));
             boolean save = super.save(printer);
             if (save){
                 return true;
@@ -67,6 +76,16 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             log.error(e.getMessage());
             return false;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -187,8 +206,23 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
      * @return
      */
     @Override
-    public R<List<UserResult>> getUserPrintTopList() {
-
+    public R<List<CountTop10VO>> getUserPrintTopList(Integer type) {
+        if (type.equals(1)){
+            //需要优化 每天只统计一次
+            List<CountTop10VO> countTop10 = printerMapper.getCountTop10();
+            if (countTop10==null){
+                throw new CustomException("业务异常");
+            }
+            return R.success(countTop10);
+        }else if(type.equals(2)){
+            //需要优化 每天只统计一次
+            List<CountTop10VO> countTop10 = printerMapper.getCountTop10EveryDay();
+            if (countTop10==null){
+                throw new CustomException("业务异常");
+            }
+            return R.success(countTop10);
+        }
         return null;
+
     }
 }

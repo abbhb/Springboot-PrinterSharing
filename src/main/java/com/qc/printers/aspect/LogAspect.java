@@ -1,5 +1,6 @@
 package com.qc.printers.aspect;
 
+import cn.hutool.core.util.TypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
@@ -24,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -88,12 +90,8 @@ public class LogAspect {
             }catch (Exception exception){
                 exception.printStackTrace();
             }
-
-
-
 //            sysLog.setIp(IPUtils.getIpAddr(request)); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
             sysLog.setUrl(request.getRequestURI()); // 请求URI
-
             // 方法请求的参数
             Map<String, String> rtnMap = converMap(request.getParameterMap());
             // 将参数所在的数组转换成json
@@ -109,11 +107,7 @@ public class LogAspect {
             sysLog.setType(request.getMethod());
             sysLog.setModel(dataResult.getData().toString());
             sysLog.setResult(dataResult.getMsg()); //獲取方法返回值中的msg，如果上面的類型錯誤就拿不到msg就會拋異常
-
-            //保存日志
-//            sysLog.setId(NanoId.randomNanoId());
             logDao.insert(sysLog);
-
         } catch (Exception e) {
             log.error(e.getMessage());
             log.error("日誌記錄異常，請檢查返回值是否是Map <String, Object>類型");

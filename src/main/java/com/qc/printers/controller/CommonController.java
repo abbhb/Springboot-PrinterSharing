@@ -27,7 +27,7 @@ public class CommonController {
     @PostMapping("/uploadimage")
     @ApiOperation("上传图像到minio上，返回url,启用了跨域")
     public R<String> uploadImage(MultipartFile file){
-        return commonService.uploadImage(file);
+        return commonService.uploadFileTOMinio(file);
 
     }
 }

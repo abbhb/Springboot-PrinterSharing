@@ -38,8 +38,7 @@ public class CommonServiceImpl implements CommonService {
         this.userService = userService;
     }
 
-    @Override
-    public R<String> uploadImage(MultipartFile file) {
+    public R<String> uploadFileTOMinio(MultipartFile file) {
         try {
             String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), file);
             log.info("imageUrl={}",fileUrl);

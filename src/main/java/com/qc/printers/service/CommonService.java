@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface CommonService {
 
-    R<String> uploadImage(MultipartFile file);
+    R<String> uploadFileTOMinio(MultipartFile file);
 
     R<String> sendEmailCode(ToEmail toEmail,String token);
 }

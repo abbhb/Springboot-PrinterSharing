@@ -2,11 +2,35 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="">
+<mapper namespace="com.qc.printers.mapper.PrinterMapper">
 
-    <!-- public List<Printer> getCountTop10();-->
-    <select id="getCountTop10" resultType="com.qc.printers.mapper.PrinterMapper">
-        SELECT number_of_printed_pages, count( * ) AS count  FROM printer  GROUP BY number_of_printed_pages  ORDER BY count DESC  LIMIT 10
+    <!-- public List<CountTop10VO> getCountTop10();-->
+    <select id="getCountTop10" resultType="com.qc.printers.pojo.vo.CountTop10VO">
+        SELECT * FROM(
+                         SELECT
+                             create_user as id,
+                             user.name,
+                             user.avatar,
+                             sum( number_of_printed_pages * number_of_printed_pages_index ) AS total
+                         FROM printer, user
+                         WHERE create_user = user.id
+                         GROUP BY
+                             create_user ORDER BY total DESC) tables
+                              LIMIT 10
     </select>
+    <!-- public List<CountTop10VO> getCountTop10EveryDay();-->
+    <select id="getCountTop10EveryDay" resultType="com.qc.printers.pojo.vo.CountTop10VO">
+        SELECT * FROM(
+                         SELECT
+                             printer.create_user as id,
+                             user.name,
+                             user.avatar,
+                             sum( number_of_printed_pages * number_of_printed_pages_index ) AS total
+                         FROM
+                             printer, user
+                         WHERE create_user = user.id AND(printer.create_time BETWEEN CONCAT(CURDATE(),' 00:00:00') AND CONCAT(CURDATE(),' 23:59:59'))
 
+                         GROUP BY
+                             create_user ORDER BY total DESC) tables LIMIT 10
+    </select>
 </mapper>

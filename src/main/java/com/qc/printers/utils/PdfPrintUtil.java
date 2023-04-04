@@ -1,6 +1,8 @@
 package com.qc.printers.utils;
 
+import com.qc.printers.common.CustomException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
@@ -10,11 +12,11 @@ import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.standard.Sides;
-import java.awt.print.Book;
-import java.awt.print.PageFormat;
-import java.awt.print.Paper;
-import java.awt.print.PrinterJob;
+import java.awt.print.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 @Slf4j
 public class PdfPrintUtil {
@@ -24,14 +26,20 @@ public class PdfPrintUtil {
      * @param jobName  文件名
      * @param pageNum  页码
      */
-    public static void printFile(String fileUrl, String printService, String jobName,int pageNum,Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue,Integer isDUPLEX) {
-        File file = new File(fileUrl);
+    public static void printFile(String fileUrl, String printService, String jobName, int pageNum, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, Integer isDUPLEX) {
+        if (StringUtils.isEmpty(fileUrl)){
+            throw new CustomException("打印工具出错:1");
+        }
+        InputStream inputStream = null;
         try {
-            PDDocument document = PDDocument.load(file);
+            URL fileIO = new URL(fileUrl);
+            inputStream = fileIO.openStream();
+            PDDocument document = PDDocument.load(inputStream);
             PDFPrintable printable = new PDFPrintable(document);
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setJobName("文件:"+jobName);
             job.setPrintable(printable);
+
 //            job.setPrintService(specifyPrinter(printService));
             //job.setPageable(new PDFPageable(document));
             Paper paper = new Paper();
@@ -95,10 +103,19 @@ public class PdfPrintUtil {
             }else {
                 job.print();
             }
+        }  catch (IOException e) {
+            log.error(e.getMessage());
+        } catch (PrinterException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (inputStream!=null){
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    throw new CustomException(e.getMessage());
+                }
+            }
 
-
-        }  catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

@@ -3,10 +3,10 @@ package com.qc.printers.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
+import com.qc.printers.pojo.vo.CountTop10VO;
 
 import java.util.List;
 
@@ -23,5 +23,5 @@ public interface PrinterService extends IService<Printer> {
 
     R<List<ValueLabelResult>> getAllUserPrinter();
 
-    R<List<UserResult>> getUserPrintTopList();
+    R<List<CountTop10VO>> getUserPrintTopList(Integer type);
 }
