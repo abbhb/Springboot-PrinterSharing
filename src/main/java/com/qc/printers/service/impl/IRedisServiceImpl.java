@@ -1,19 +1,20 @@
 package com.qc.printers.service.impl;
 
-import com.qc.printers.service.IStringRedisService;
+
+import com.qc.printers.service.IRedisService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class IStringRedisServiceImpl implements IStringRedisService {
+public class IRedisServiceImpl implements IRedisService {
 
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
 
     @Autowired
-    public IStringRedisServiceImpl(StringRedisTemplate redisTemplate){
+    public IRedisServiceImpl(RedisTemplate redisTemplate){
         this.redisTemplate = redisTemplate;
     }
 //    @Override
@@ -29,6 +30,16 @@ public class IStringRedisServiceImpl implements IStringRedisService {
     @Override
     public void del(String token) {
         redisTemplate.delete(token);
+
+    }
+    @Override
+    public void hashPut(String key,String hashKey,Object object) {
+        redisTemplate.opsForHash().put(key,hashKey,object);
+    }
+
+    @Override
+    public Object getHash(String key, String hashKey) {
+        return redisTemplate.opsForHash().get(key,hashKey);
     }
 
     @Override

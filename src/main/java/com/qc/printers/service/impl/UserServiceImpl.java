@@ -9,12 +9,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 
+import com.qc.printers.common.MyString;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.Permission;
 import com.qc.printers.pojo.entity.User;
-import com.qc.printers.service.IStringRedisService;
+import com.qc.printers.service.IRedisService;
+
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.PWDMD5;
@@ -28,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
@@ -36,11 +40,11 @@ import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    private final IStringRedisService iStringRedisService;
+    private final IRedisService iRedisService;
 
     @Autowired
-    public UserServiceImpl(IStringRedisService iStringRedisService) {
-        this.iStringRedisService = iStringRedisService;
+    public UserServiceImpl(IRedisService iRedisService) {
+        this.iRedisService = iRedisService;
     }
 
 
@@ -86,10 +90,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         //jwt生成token，token里面有userid，redis里存uuid
         String uuid = RandomName.getUUID();//uuid作为key
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+
 
         String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-        iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
+        iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
         return R.success(UserResult);
     }
 
@@ -118,9 +124,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //jwt生成token，token里面有userid，redis里存uuid
         String uuid = RandomName.getUUID();//uuid作为key
 
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+
+
         String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-        iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
+        iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
         return R.success(UserResult);
     }
 
@@ -177,7 +186,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim uuid = decodedJWT.getClaim("uuid");
-            iStringRedisService.del(uuid.asString());
+            iRedisService.del(uuid.asString());
             return R.successOnlyMsg("下线成功",Code.DEL_TOKEN);
         }catch (Exception e){
             return R.error(Code.DEL_TOKEN,"登陆过期");
@@ -188,7 +197,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public R<UserResult> loginByToken(String token) {
         DecodedJWT decodedJWT = JWTUtil.deToken(token);
         Claim uuid = decodedJWT.getClaim("uuid");
-        String value = iStringRedisService.getValue(uuid.asString());
+        String value = iRedisService.getValue(uuid.asString());
         if (StringUtils.isEmpty(value)) {
             return R.error("登录过期");
         }
@@ -196,7 +205,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (one==null){
             return R.error("err");
         }
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+
+        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
         return R.success(UserResult);
     }
 
@@ -211,11 +222,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId==null){
             return R.error("无操作对象");
         }
-        if (Long.valueOf(id).equals(1L)){
-            return R.error("禁止操作admin");
+
+        User byId = super.getById(id);
+        if (byId==null){
+            //don't hava object
+            throw new CustomException("没有对象");
         }
-        User byId = super.getById(userId);
-        if (!byId.getPermission().equals(1)){
+        User myId = super.getById(userId);
+        if (myId==null){
+            //don't hava object
+            throw new CustomException("没有对象");
+        }
+        if (userId.equals(Long.valueOf(id))){
+            return R.error("禁止操作自己账号");
+        }
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(byId.getPermission()));
+        Permission permissionMyId = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(myId.getPermission()));
+        if (permissionMyId.getWeight()<=permission.getWeight()){
             return R.error("权限不足");
         }
 
@@ -412,8 +435,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
-           
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),null,user1.getEmail(),user1.getAvatar());
+            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user1.getPermission()));
+
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,user1.getEmail(),user1.getAvatar());
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -485,7 +509,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            if (!iStringRedisService.getValue("emailcode:"+id.asString()).equals(code)){
+            if (!iRedisService.getValue("emailcode:"+id.asString()).equals(code)){
                 throw new CustomException("验证码错误");
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
@@ -503,7 +527,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             return R.error("异常");
         }catch (Exception e){
-            return R.error(Code.DEL_TOKEN,"登陆过期");
+            return R.error(Code.DEL_TOKEN,e.getMessage());
         }
     }
 

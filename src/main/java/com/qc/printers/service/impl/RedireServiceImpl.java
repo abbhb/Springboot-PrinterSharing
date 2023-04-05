@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
+import com.qc.printers.common.MyString;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
+import com.qc.printers.pojo.entity.Permission;
 import com.qc.printers.pojo.entity.TrLogin;
 import com.qc.printers.pojo.entity.User;
-import com.qc.printers.service.IStringRedisService;
+import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.RedirectService;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
@@ -35,15 +37,15 @@ public class RedireServiceImpl implements RedirectService {
 
     private final TrLoginService trLoginService;
 
-    private final IStringRedisService iStringRedisService;
+    private final IRedisService iRedisService;
 
     private final UserService userService;
 
     @Autowired
-    public RedireServiceImpl(RestTemplate restTemplate, TrLoginService trLoginService, IStringRedisService iStringRedisService, UserService userService) {
+    public RedireServiceImpl(RestTemplate restTemplate, TrLoginService trLoginService, IRedisService iRedisService, UserService userService) {
         this.restTemplate = restTemplate;
         this.trLoginService = trLoginService;
-        this.iStringRedisService = iStringRedisService;
+        this.iRedisService = iRedisService;
         this.userService = userService;
     }
 
@@ -107,8 +109,10 @@ public class RedireServiceImpl implements RedirectService {
             String uuid = RandomName.getUUID();//uuid作为key
             User one = userService.getById(userId);
             String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-            iStringRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-            UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),token,one.getEmail(),one.getAvatar());
+            iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
+            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+
+            UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
             return R.success(UserResult);
         } else if (trLogin.getStatus().equals(0)) {
             //首次使用该第三方,返回msg，让前端让弹出表单进行绑定或者新建
@@ -176,8 +180,10 @@ public class RedireServiceImpl implements RedirectService {
             String uuid = RandomName.getUUID();//uuid作为key
             User ones = userService.getById(userId);
             String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
-            iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
-            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
+            iRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
+            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+
+            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),permission.getName(),token,ones.getEmail(),ones.getAvatar());
             return R.success(UserResult);
         }else if (type.equals(2)){
             if (!password.matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
@@ -211,8 +217,10 @@ public class RedireServiceImpl implements RedirectService {
             String uuid = RandomName.getUUID();//uuid作为key
             User ones = userService.getById(user.getId());
             String token = JWTUtil.getToken(String.valueOf(ones.getId()),String.valueOf(ones.getPermission()),uuid);
-            iStringRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
-            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),token,ones.getEmail(),ones.getAvatar());
+            iRedisService.setTokenWithTime(uuid, String.valueOf(ones.getId()),3600L);//token作为value，id是不允许更改的
+            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(ones.getPermission()));
+
+            UserResult UserResult = new UserResult(String.valueOf(ones.getId()),ones.getUsername(),ones.getName(),ones.getPhone(),ones.getSex(),String.valueOf(ones.getStudentId()),ones.getStatus(),ones.getCreateTime(),ones.getUpdateTime(),ones.getPermission(),permission.getName(),token,ones.getEmail(),ones.getAvatar());
             return R.success(UserResult);
         }
         return null;

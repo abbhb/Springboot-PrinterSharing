@@ -37,6 +37,7 @@ mybatis-plus:
     #上边这个开启sql日志
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    cache-enabled: false
   global-config:
     #雪花算法
     db-config:

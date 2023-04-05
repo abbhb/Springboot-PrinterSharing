@@ -5,7 +5,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.annotation.NeedToken;
-import com.qc.printers.service.IStringRedisService;
+import com.qc.printers.service.IRedisService;
 import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
     @Autowired
-    private IStringRedisService iStringRedisService;//这个是针对字符串的存储，若是存对象，请使用redisTemplate
+    private IRedisService iRedisService;//这个是针对字符串的存储，若是存对象，请使用redisTemplate
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 在拦截器中，如果请求为OPTIONS请求，则返回true，表示可以正常访问，然后就会收到真正的GET/POST请求
@@ -59,7 +59,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
             if (cid==null){
                 throw new CustomException("不安全");//后期加上安全处理
             }
-            Long tokenTTL = iStringRedisService.getTokenTTL(uuid.asString());
+            Long tokenTTL = iRedisService.getTokenTTL(uuid.asString());
             if (tokenTTL==null){
                 log.info("tokenTTL==null");
                 response.setStatus(Code.DEL_TOKEN);
@@ -68,7 +68,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                 if (tokenTTL.intValue()!=-2){
                     if (tokenTTL.intValue()<=1500){//刷新统一放在刷新接口中
                         //一小时内如果访问过需要token的接口且token剩余时间小于1500s的话重置token过期时间为3600s
-                        iStringRedisService.setTokenWithTime(uuid.asString(),cid.asString(),3600L);
+                        iRedisService.setTokenWithTime(uuid.asString(),cid.asString(),3600L);
                     }
                 }else {
                     log.info("tokenTTL==-2");

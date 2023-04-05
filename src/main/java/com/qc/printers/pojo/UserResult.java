@@ -36,6 +36,8 @@ public class UserResult implements Serializable {
 
     //分组
     private Integer permission;
+    //权限名
+    private String permissionName;
 
     private String token;
 

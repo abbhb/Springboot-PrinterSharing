@@ -47,10 +47,14 @@ public class PermissionInterceptor implements HandlerInterceptor {
         //需要的权限
         String annotationValue = method.getAnnotation(PermissionCheck.class).value();
         User currentUser = ThreadLocalUtil.getCurrentUser();
+
         if (currentUser==null){
             throw new CustomException("没有权限");
         }
-        if ((!currentUser.getPermission().equals(1))&&(!currentUser.getPermission().equals(Integer.valueOf(annotationValue)))){
+        /**
+         * 10为系统管理员
+         */
+        if ((!currentUser.getPermission().equals(10))&&(!currentUser.getPermission().equals(Integer.valueOf(annotationValue)))){
             throw new CustomException("没有权限");
         }
         return true;

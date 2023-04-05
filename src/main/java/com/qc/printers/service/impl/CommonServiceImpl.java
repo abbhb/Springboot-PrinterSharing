@@ -9,7 +9,7 @@ import com.qc.printers.config.MinIoProperties;
 import com.qc.printers.pojo.entity.ToEmail;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.CommonService;
-import com.qc.printers.service.IStringRedisService;
+import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.MinIoUtil;
@@ -26,15 +26,15 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommonServiceImpl implements CommonService {
     @Autowired
     MinIoProperties minIoProperties;
-    private final IStringRedisService iStringRedisService;
+    private final IRedisService iRedisService;
 
     private final UserService userService;
     @Autowired
     private JavaMailSender mailSender;
 
     @Autowired
-    public CommonServiceImpl(IStringRedisService iStringRedisService, UserService userService) {
-        this.iStringRedisService = iStringRedisService;
+    public CommonServiceImpl(IRedisService iRedisService, UserService userService) {
+        this.iRedisService = iRedisService;
         this.userService = userService;
     }
 
@@ -85,7 +85,7 @@ public class CommonServiceImpl implements CommonService {
             return R.error("登陆过期");
         }
         mailSender.send(message);
-        iStringRedisService.setTokenWithTime("emailcode:"+id.asString(),verCode, 300L);
+        iRedisService.setTokenWithTime("emailcode:"+id.asString(),verCode, 300L);
         return R.success("发送成功");
     }
 }
