@@ -164,6 +164,12 @@ public class RedireServiceImpl implements RedirectService {
             }else {
                 return R.error("密码错了");
             }
+
+            //不允许绑定到系统管理员上
+            boolean equals = one.getPermission().equals(10);
+            if (equals){
+                return R.error("禁止绑定到系统管理员上");
+            }
             //绑定原有账号
             LambdaUpdateWrapper<TrLogin> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.eq(TrLogin::getTrId,trId);
