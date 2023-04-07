@@ -54,6 +54,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                 uuid = decodedJWT.getClaim("uuid");
                 cid = decodedJWT.getClaim("id");
             }catch (Exception e){
+                response.setStatus(Code.DEL_TOKEN);
                 throw new CustomException("登录err");
             }
             if (cid==null){

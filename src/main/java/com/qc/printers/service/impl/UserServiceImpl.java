@@ -303,6 +303,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaUpdateWrapper.set(User::getPermission,user.getPermission());
         lambdaUpdateWrapper.set(User::getStatus,user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone,user.getPhone());
+        lambdaUpdateWrapper.set(User::getAvatar,user.getAvatar());
         boolean update = super.update(lambdaUpdateWrapper);
         if (update){
             return R.success("更新成功");
@@ -341,6 +342,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaUpdateWrapper.set(User::getPermission,user.getPermission());
         lambdaUpdateWrapper.set(User::getStatus,user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone,user.getPhone());
+        lambdaUpdateWrapper.set(User::getAvatar,user.getAvatar());
         boolean update = super.update(lambdaUpdateWrapper);
         if (update){
             return R.success("更新成功");
