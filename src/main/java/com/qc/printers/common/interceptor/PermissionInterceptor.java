@@ -66,7 +66,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
         /**
          * 10为系统管理员
          */
-        if ((!currentUser.getPermission().equals(10))&&(!(currentUserPermission.getWeight()>needUserPermission.getWeight()))){
+        if ((!currentUser.getPermission().equals(10))&&(!(currentUserPermission.getWeight()>=needUserPermission.getWeight()))){
             throw new CustomException("没有权限");
         }
         return true;

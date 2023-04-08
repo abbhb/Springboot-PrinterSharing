@@ -70,13 +70,11 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         }
         super.page(pageInfo,lambdaQueryWrapper);
 
-//        log.info("pageInfo = {}",pageInfo);
 
         PageData<QuickNavigationItemResult> pageData = new PageData<>();
         List<QuickNavigationItemResult> results = new ArrayList<>();
         for (QuickNavigationItem quickNavigationItem : pageInfo.getRecords()) {
 
-//            log.info("quickNavigationItem = {}",quickNavigationItem);
             QuickNavigationItemResult quickNavigationItemResult = new QuickNavigationItemResult();
             quickNavigationItemResult.setName(quickNavigationItem.getName());
             quickNavigationItemResult.setId(String.valueOf(quickNavigationItem.getId()));

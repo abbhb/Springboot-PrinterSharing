@@ -40,8 +40,12 @@ public class MySplit {
             map.put(endKey, endMatcher.start());
             mapList.add(map);
         }
-        if (permission.equals(1)){
-            StringBuilder newContent = new StringBuilder();
+        if (mapList.size()==0){
+            return content;
+        }
+        StringBuilder newContent = new StringBuilder();
+        if (permission.equals(1)||permission.equals(10)){
+
             int last = 0;
             for (int i = 0; i < mapList.size(); i++) {
                 Map<String, Integer> tempMap = mapList.get(i);
@@ -55,13 +59,11 @@ public class MySplit {
                 newContent.append(content.substring(last, i1));
                 newContent.append(smallValue);
                 last = i2;
-
-//            #######进行业务操作即可###########
             }
-//            log.info("newContent = {}", newContent);
+            //此处注意,最后一个权限符号后若有内容也得加上
+            newContent.append(content.substring(last, content.length()));
             return newContent.toString();
         }else{
-            String newContent = "";
             int last = 0;
             for (int i = 0; i < mapList.size(); i++) {
                 Map<String, Integer> tempMap = mapList.get(i);
@@ -72,13 +74,11 @@ public class MySplit {
                 //tempMap.get(endKey)到i2之间为符号位
                 String smallValue= content.substring(tempMap.get(startKey),
                         tempMap.get(endKey));
-                newContent += content.substring(last, i1);
-//                newContent += smallValue;
+                newContent.append(content.substring(last, i1));
                 last = i2;
-
-//            #######进行业务操作即可###########
             }
-//            log.info("newContent = {}",newContent);
+            //此处注意,最后一个权限符号后若有内容也得加上
+            newContent.append(content.substring(last, content.length()));
             return newContent.toString();
 
         }
