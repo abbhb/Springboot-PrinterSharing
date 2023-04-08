@@ -30,13 +30,9 @@ public class WordPrintUtil {
             Dispatch docs = app.getProperty("Documents").toDispatch();
             doc = Dispatch.call(docs, "Open",public_file+"\\"+filename).toDispatch();
             log.info("打开文档:" + public_file+"\\"+filename);
-//            String suffix = StringUtils.substringAfterLast(filename , ".");
-
-            System.out.println("转换文档到 PDF:" + public_file+"\\"+filename+".pdf");
             Dispatch.call(doc, "SaveAs", public_file+"\\"+filename+".pdf", // FileName
                     17);//17是pdf格式
             long end = System.currentTimeMillis();
-            System.out.println("转换完成..用时：" + (end - start) + "ms.");
 
         } catch (Exception e) {
             System.out.println("========Error:文档转换失败：" + e.getMessage());

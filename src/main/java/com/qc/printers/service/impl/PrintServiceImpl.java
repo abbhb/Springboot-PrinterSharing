@@ -16,6 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,13 +120,11 @@ public class PrintServiceImpl implements PrintService {
      */
     @Transactional
     @Override
-    public boolean printsForWord(String newName, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Integer isDuplex,Long userId) {
+    public boolean printsForWord(String newName,String bakUrl, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Integer isDuplex,Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
-        InputStream inputStream = null;
         try {
             WordPrintUtil.wordToPDF(newName);
-            inputStream = Files.newInputStream(Paths.get(public_file + "\\" + newName + ".pdf"));
-            String temURL = MinIoUtil.upload(minIoProperties.getBucketName(),RandomName.getRandomName(newName),inputStream);
+            String temURL = MinIoUtil.upload(minIoProperties.getBucketName(),RandomName.getRandomName(newName)+".pdf",public_file + "\\" + newName + ".pdf");
             log.info("imageUrl={}",temURL);
             String[] split = temURL.split("\\?");
 
@@ -139,15 +138,16 @@ public class PrintServiceImpl implements PrintService {
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-            return false;
-        }finally {
-            if (inputStream!=null){
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            //把打印任务交给python尝试
+            String url = "http://192.168.12.106:23456/"+"?url="+bakUrl;
+            //         请求客户端
+            RestTemplate client = new RestTemplate();
+            //      发起请求
+            String body = client.getForEntity(url, String.class).getBody();
+            System.out.println("******** Get请求 *********");
+            assert body != null;
+            return printsForPDF(body, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId);
+
         }
     }
     

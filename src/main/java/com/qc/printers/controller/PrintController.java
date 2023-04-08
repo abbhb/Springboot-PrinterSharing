@@ -59,15 +59,8 @@ public class PrintController {
     //后期可以传回token拿到用户信息
     public R<String> uploadPrint(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages,@PathParam(value = "printingDirection") Integer printingDirection,@PathParam(value = "printBigValue") Integer printBigValue,@PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex,@PathParam(value = "isDUPLEX") Integer isDuplex,@RequestHeader(value="Authorization", defaultValue = "") String token) {
         log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={},isDUPLEX={}",numberOfPrintedPages,printingDirection,numberOfPrintedPagesIndex,printBigValue,isDuplex);
-
-        if (file==null){
-            return R.error("异常");
-        }
-        if (numberOfPrintedPages==null){
-            return R.error("参数呢");
-        }
-        if (printingDirection==null){
-            return R.error("参数呢");
+        if (file==null||numberOfPrintedPages==null||printingDirection==null){
+            return R.error("参数异常");
         }
         if (printBigValue==null){
             printBigValue = 3;//给默认
@@ -75,50 +68,34 @@ public class PrintController {
         if (StringUtils.isEmpty(numberOfPrintedPagesIndex)){
             numberOfPrintedPagesIndex = "all";//给默认,默认全部打印
         }
-        Long userId = 0L;
-        try {
-            DecodedJWT decodedJWT = JWTUtil.deToken(token);
-            Claim id = decodedJWT.getClaim("id");
-            if (StringUtils.isEmpty(id.asString())){
-                userId = 0L;
-            }else {
-                userId = Long.valueOf(id.asString());
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        //首先要给文件找一个目录
-        //先写返回值
         //再用pdf格式开始书写,先找原始的名字
         String originName = file.getOriginalFilename();
+        if (originName.contains("\\?")||originName.contains("？")){
+            return R.error("文件名里不允许包含？请修改后在打印");
+        }
+
         String suffix = StringUtils.substringAfterLast(originName , ".");
         //判断文件类型是不是pdf
         if((!suffix.equals("pdf"))&&(!suffix.equals("docx"))){
             //如果不是的话，就返回类型
             return R.error("文件类型不对");
         }
-
+        //先在minio上传一份原始文件,若打印失败可以调用其余方式
+        String fileURL = commonService.uploadFileTOMinio(file).getData();
         if (suffix.equals("pdf")){
-            //word需要先本地转换
-            //再是保存文件到minio上
-            //随机文件名,后期做个记录，跟用户绑定 (这一步minio上传时已经做了)
-            R<String> stringR = commonService.uploadFileTOMinio(file);
-            String fileURL = stringR.getData();
-            log.info("路径为:{}",fileURL);
+            //文件到minio上
             if (StringUtils.isEmpty(fileURL)){
                 throw new CustomException("打印失败:commonService.uploadFileTOMinio(file);");
             }
-
-            boolean isPrintSuccess = printService.printsForPDF(fileURL,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,userId);
+            boolean isPrintSuccess = printService.printsForPDF(fileURL,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,JWTUtil.getUserId(token));
             if (isPrintSuccess){
                 return R.success("打印成功,请稍后!");
             }
             return R.error("打印失败");
         } else if (suffix.equals("docx")) {
             //保存到本地
-            String newFileName = WordPrintUtil.saveComputer(file);
-
-            boolean isPrintSuccess = printService.printsForWord(newFileName,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,userId);
+            String newFileName = WordPrintUtil.saveComputer(file);//本地文件均为缓存,可以手动删除
+            boolean isPrintSuccess = printService.printsForWord(newFileName,fileURL,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,JWTUtil.getUserId(token));
             if (isPrintSuccess){
                 return R.success("打印成功,请稍后!");
             }

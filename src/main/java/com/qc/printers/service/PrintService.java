@@ -7,5 +7,5 @@ public interface PrintService {
 
     boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages,Integer printingDirection,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex,Long userId);
 
-    boolean printsForWord(String newName, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex,Integer isDuplex,Long userId);
+    boolean printsForWord(String newName,String bakUrl, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex,Integer isDuplex,Long userId);
 }

@@ -5,8 +5,10 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,6 +37,22 @@ public class JWTUtil {
         return token;
     }
 
+
+    public static Long getUserId(String token){
+        Long userId = 0L;
+        try {
+            DecodedJWT decodedJWT = JWTUtil.deToken(token);
+            Claim id = decodedJWT.getClaim("id");
+            if (StringUtils.isEmpty(id.asString())){
+                userId = 0L;
+            }else {
+                userId = Long.valueOf(id.asString());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return userId;
+    }
     /**
      * 解密
      * @author 张超

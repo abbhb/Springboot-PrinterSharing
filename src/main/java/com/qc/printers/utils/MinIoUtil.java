@@ -99,8 +99,9 @@ public class MinIoUtil {
      * @date : 2020/8/16 20:53
      */
     @SneakyThrows(Exception.class)
-    public static void upload(String bucketName, String fileName, String filePath) {
+    public static String upload(String bucketName, String fileName, String filePath) {
         minioClient.putObject(bucketName, fileName, filePath, null);
+        return getFileUrl(bucketName, fileName);
     }
 
     /**
