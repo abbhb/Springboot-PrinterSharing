@@ -45,6 +45,6 @@ mybatis-plus:
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
   url: http://10.15.245.153:9090
-  accessKey: qvz3EsInB7yP10ps
-  secretKey: aWM9sGLm8ouRKAmLEwE5rPx2h5owRTrQ
+  accessKey: N2T6ZfARSupeUYbn
+  secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
   bucketName: aistudio
