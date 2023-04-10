@@ -139,7 +139,7 @@ public class PrintServiceImpl implements PrintService {
             // TODO Auto-generated catch block
             e.printStackTrace();
             //把打印任务交给python尝试
-            String url = "http://192.168.12.106:23456/"+"?url="+bakUrl;
+            String url = "http://127.0.0.1:23456/"+"?url="+bakUrl;
             //         请求客户端
             RestTemplate client = new RestTemplate();
             //      发起请求

@@ -43,6 +43,31 @@ public class ParamsCalibration {
         }
     }
 
+    public static boolean checkIsWord(String name){
+        if (name.equals("doc")){
+            return true;
+        } else if (name.equals("docx")) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+    public static boolean checkIsPdf(String name){
+        if (name.equals("pdf")){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public static boolean checkIsCanPrint(String name){
+       if (checkIsPdf(name)){
+           return true;
+       } else if (checkIsWord(name)) {
+           return true;
+       }else {
+           return false;
+       }
+    }
 
     public static Printer somePrinterParams(String oldName,String url,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
         Printer printer = new Printer();

@@ -15,6 +15,7 @@ import com.qc.printers.service.CommonService;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.utils.ParamsCalibration;
 import com.qc.printers.utils.WordPrintUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -76,13 +77,13 @@ public class PrintController {
 
         String suffix = StringUtils.substringAfterLast(originName , ".");
         //判断文件类型是不是pdf
-        if((!suffix.equals("pdf"))&&(!suffix.equals("docx"))){
+        if(ParamsCalibration.checkIsCanPrint(suffix)){
             //如果不是的话，就返回类型
             return R.error("文件类型不对");
         }
         //先在minio上传一份原始文件,若打印失败可以调用其余方式
         String fileURL = commonService.uploadFileTOMinio(file).getData();
-        if (suffix.equals("pdf")){
+        if (ParamsCalibration.checkIsPdf(suffix)){
             //文件到minio上
             if (StringUtils.isEmpty(fileURL)){
                 throw new CustomException("打印失败:commonService.uploadFileTOMinio(file);");
@@ -92,7 +93,7 @@ public class PrintController {
                 return R.success("打印成功,请稍后!");
             }
             return R.error("打印失败");
-        } else if (suffix.equals("docx")) {
+        } else if (ParamsCalibration.checkIsWord(suffix)) {
             //保存到本地
             String newFileName = WordPrintUtil.saveComputer(file);//本地文件均为缓存,可以手动删除
             boolean isPrintSuccess = printService.printsForWord(newFileName,fileURL,originName,numberOfPrintedPages,printingDirection,printBigValue,numberOfPrintedPagesIndex,isDuplex,JWTUtil.getUserId(token));
