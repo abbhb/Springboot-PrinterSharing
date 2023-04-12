@@ -1,5 +1,7 @@
 # AI综合服务平台
 
+
+
 ### Version：1.8.0
 
 ## 环境准备
@@ -7,6 +9,11 @@
 - redis 最新版即可
 - mysql8.0.20
 - minio 最新版即可
+
+
+- [AI服务平台主后端](https://github.com/abbhb/Springboot-PrinterSharing)
+- [AI服务平台前端(本项目也是其中一部分的后端)](https://github.com/abbhb/Vue-PrinterSharing)
+- [AI服务平台DOC后端](https://github.com/abbhb/Printer-Doc)
 
 
 ## 运行
