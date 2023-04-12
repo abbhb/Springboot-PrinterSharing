@@ -77,7 +77,7 @@ public class PrintController {
 
         String suffix = StringUtils.substringAfterLast(originName , ".");
         //判断文件类型是不是pdf
-        if(ParamsCalibration.checkIsCanPrint(suffix)){
+        if(!ParamsCalibration.checkIsCanPrint(suffix)){
             //如果不是的话，就返回类型
             return R.error("文件类型不对");
         }
