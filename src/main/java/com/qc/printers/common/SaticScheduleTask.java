@@ -1,9 +1,12 @@
 package com.qc.printers.common;
 
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.time.LocalDateTime;
 
@@ -17,4 +20,13 @@ public class SaticScheduleTask {
 //    private void configureTasks() {
 //        System.err.println("执行静态定时任务时间: " + LocalDateTime.now());
 //    }
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        // 线程池大小
+        scheduler.setPoolSize(10);
+        // 线程名字前缀
+        scheduler.setThreadNamePrefix("task-thread-");
+        return scheduler;
+    }
 }

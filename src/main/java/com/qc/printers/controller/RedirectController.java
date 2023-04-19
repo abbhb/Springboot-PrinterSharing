@@ -16,6 +16,7 @@ import java.util.Map;
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/redirect")
 @Api("第三方认证回调接口")
+@CrossOrigin("*")
 @Slf4j
 public class RedirectController {
     private final RedirectService redirectService;

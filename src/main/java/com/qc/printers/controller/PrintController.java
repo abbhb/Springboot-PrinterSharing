@@ -37,6 +37,7 @@ import static com.qc.printers.common.MyString.public_file;
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/printer")
 @Slf4j
+@CrossOrigin("*")
 @Api("共享打印相关api")
 public class PrintController {
 

@@ -30,6 +30,7 @@ import java.util.List;
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/quicknavigation")
 @Api("导航页相关接口")
+@CrossOrigin("*")
 @Slf4j
 public class QuickNavigationController {
 

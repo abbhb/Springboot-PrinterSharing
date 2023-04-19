@@ -33,6 +33,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
      */
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
+
         // 解决swagger无法访问
         registry.addResourceHandler("/swagger-ui/**").addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
 //        log.info("开始静态资源映射");
@@ -51,6 +52,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         //ir.addPathPatterns("/store/**");
         // 不拦截路径，如：注册、登录、忘记密码等
     }
+
+
     /**
      * 扩展mvc框架的消息转换器
      * @param converters

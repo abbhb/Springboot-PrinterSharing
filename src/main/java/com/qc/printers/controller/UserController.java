@@ -28,6 +28,7 @@ import java.util.Map;
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/user")
 @Api("和用户相关的接口")
+@CrossOrigin("*")
 @Slf4j
 public class UserController {
     private final UserService userService;
@@ -42,6 +43,9 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation(value = "登录",notes = "type:0账密登录 type:1邮箱登录")
     public R<UserResult> login(@RequestBody Map<String, Object> user){
+        /**
+         * 对密码进行加密传输
+         */
         String username = (String) user.get("username");
         String password = (String) user.get("password");
         int type = ParamsCalibration.booleanLoginType(username);

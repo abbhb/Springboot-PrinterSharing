@@ -1,6 +1,7 @@
 package com.qc.printers.aspect;
 
 import cn.hutool.core.util.TypeUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
@@ -90,7 +91,7 @@ public class LogAspect {
             }catch (Exception exception){
                 exception.printStackTrace();
             }
-//            sysLog.setIp(IPUtils.getIpAddr(request)); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
+            sysLog.setIp(ServletUtil.getClientIP(request)); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
             sysLog.setUrl(request.getRequestURI()); // 请求URI
             // 方法请求的参数
             Map<String, String> rtnMap = converMap(request.getParameterMap());
