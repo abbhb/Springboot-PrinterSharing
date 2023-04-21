@@ -67,11 +67,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             URL url = new URL(urlName);
             inputStream = url.openStream();
             printer.setContentHash(FileMD5.md5HashCode(inputStream));
-            boolean save = super.save(printer);
-            if (save){
-                return true;
-            }
-            return false;
+            return super.save(printer);
         } catch (FileNotFoundException e) {
             log.error("打印记录缺失");
             log.error(e.getMessage());
