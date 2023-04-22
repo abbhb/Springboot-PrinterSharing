@@ -61,10 +61,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             return false;
         }
-        // 双面打印时打印记录中记录使用纸张页数, 向上取整
-         if (printer.getIsDuplex() == 1) {
-             printer.setNeedPrintPagesEndIndex((int) Math.ceil((double) printer.getNeedPrintPagesEndIndex() / 2));
-         }
+
         InputStream inputStream = null;
         try {
             URL url = new URL(urlName);
@@ -102,6 +99,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         }
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.eq(Printer::getCreateUser,Long.valueOf(id.asString()));
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
         //暂时不支持通过日期模糊查询
@@ -125,6 +123,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
             printerResult.setId(String.valueOf(printerItem1.getId()));
+            printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
             results.add(printerResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -148,6 +147,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
 
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
         lambdaQueryWrapper.eq(!StringUtils.isEmpty(user),Printer::getCreateUser,user);
 
@@ -168,6 +168,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
+            printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
             printerResult.setUrl(printerItem1.getUrl());
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){

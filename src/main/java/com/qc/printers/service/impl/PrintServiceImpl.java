@@ -63,7 +63,8 @@ public class PrintServiceImpl implements PrintService {
                 PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, pages, copies, printingDirection, printBigValue, isDuplex);
                 try {
                     // 打印记录-->后期升级为rabbitmq
-                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, copies, printBigValue, pages, isDuplex,pages, userId), newName);
+
+                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, copies, printBigValue, pages, isDuplex,pages,pages, userId), newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
@@ -73,7 +74,7 @@ public class PrintServiceImpl implements PrintService {
                 PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, needPrintPagesEndIndex, copies, printingDirection, printBigValue, isDuplex);
                 try {
                     // 打印记录
-                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, copies, printBigValue, needPrintPagesEndIndex, isDuplex,pages, userId), newName);
+                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, copies, printBigValue, needPrintPagesEndIndex, isDuplex,pages,needPrintPagesEndIndex, userId), newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());

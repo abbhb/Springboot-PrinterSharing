@@ -69,6 +69,20 @@ public class ParamsCalibration {
        }
     }
 
+    /**
+     * 双面打印的singleDocumentPaperUsage在此处变更
+     * @param oldName
+     * @param url
+     * @param printingDirection
+     * @param copies
+     * @param printBigValue
+     * @param needPrintPagesEndIndex
+     * @param isDuplex
+     * @param originFilePages
+     * @param singleDocumentPaperUsage
+     * @param userId
+     * @return
+     */
     public static Printer somePrinterParams(String oldName,String url,Integer printingDirection,Integer copies,Integer printBigValue,Integer needPrintPagesEndIndex,Integer isDuplex,Integer originFilePages,Integer singleDocumentPaperUsage ,Long userId){
         Printer printer = new Printer();
         printer.setName(oldName);
@@ -76,11 +90,19 @@ public class ParamsCalibration {
         printer.setPrintingDirection(printingDirection);
         printer.setCopies(copies);
         printer.setPrintBigValue(printBigValue);
-        printer.setSingleDocumentPaperUsage(singleDocumentPaperUsage);
+        printer.setOriginFilePages(originFilePages);
         printer.setNeedPrintPagesEndIndex(needPrintPagesEndIndex);
         printer.setCreateUser(userId);
         printer.setIsDuplex(isDuplex);
-        printer.setOriginFilePages(originFilePages);
+
+        // 双面打印时打印记录中记录使用纸张页数, 向上取整
+        if (isDuplex == 1) {
+            //设置真实单份文档用纸
+            printer.setSingleDocumentPaperUsage(singleDocumentPaperUsage);
+            printer.setSingleDocumentPaperUsage((int) Math.ceil((double) singleDocumentPaperUsage / 2));
+        }else {
+            printer.setSingleDocumentPaperUsage(singleDocumentPaperUsage);
+        }
         return printer;
     }
 }
