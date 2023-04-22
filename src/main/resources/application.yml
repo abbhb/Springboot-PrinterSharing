@@ -2,23 +2,23 @@ server:
   port: 8080
 spring:
   #邮箱验证码配置
-  mail:
-    #smtp服务主机  qq邮箱则为smtp.qq.com;163邮箱是smtp.163.com
-    host: smtp.qq.com
-    #服务协议
-    protocol: smtp
-    #发送邮件的账户
-    username: 3482238110@qq.com
-    #授权码
-    password: btrmkamrleqrchdc
-    test-connection: true
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
+#  mail:
+#    #smtp服务主机  qq邮箱则为smtp.qq.com;163邮箱是smtp.163.com
+#    host: smtp.qq.com
+#    #服务协议
+#    protocol: smtp
+#    #发送邮件的账户
+#    username: 3482238110@qq.com
+#    #授权码
+#    password: btrmkamrleqrchdc
+#    test-connection: true
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
+#            required: true
 #  profiles:
 #    active: prod
   application:
