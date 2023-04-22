@@ -1,13 +1,10 @@
 package com.qc.printers.controller;
 
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.vo.CountTop10VO;
@@ -27,12 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.websocket.server.PathParam;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
-
-import static com.qc.printers.common.MyString.public_file;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/printer")
@@ -58,29 +50,29 @@ public class PrintController {
      * 打印通用接口, 用来调用打印word或pdf服务
      * 后期可以传回token拿到用户信息
      *
-     * @param file
-     * @param numberOfPrintedPages
-     * @param printingDirection
-     * @param printBigValue
-     * @param numberOfPrintedPagesIndex
-     * @param isDuplex                  打印模式, 单面打印为0 双面打印为1
-     * @param token
+     * @param file 文明
+     * @param copies 份数
+     * @param printingDirection 打印方向
+     * @param printBigValue 打印大小配置号
+     * @param needPrintPagesEndIndex 打印页数
+     * @param isDuplex 打印模式, 单面打印为0 双面打印为1
+     * @param token token
      * @return
      */
     @CrossOrigin("*")
     @PostMapping("/uploadPrint")
     @NeedToken
     @ApiOperation(value = "打印通用接口")
-    public R<String> uploadPrint(MultipartFile file, @PathParam(value = "numberOfPrintedPages") Integer numberOfPrintedPages, @PathParam(value = "printingDirection") Integer printingDirection, @PathParam(value = "printBigValue") Integer printBigValue, @PathParam(value = "numberOfPrintedPagesIndex") String numberOfPrintedPagesIndex, @PathParam(value = "isDUPLEX") Integer isDuplex, @RequestHeader(value = "Authorization", defaultValue = "") String token) {
-        log.info("numberOfPrintedPages={},printingDirection={},numberOfPrintedPagesIndex={},printBigValuw={},isDUPLEX={}", numberOfPrintedPages, printingDirection, numberOfPrintedPagesIndex, printBigValue, isDuplex);
-        if (file == null || numberOfPrintedPages == null || printingDirection == null) {
+    public R<String> uploadPrint(MultipartFile file, @PathParam(value = "copies") Integer copies, @PathParam(value = "printingDirection") Integer printingDirection, @PathParam(value = "printBigValue") Integer printBigValue, @PathParam(value = "needPrintPagesEndIndex") Integer needPrintPagesEndIndex, @PathParam(value = "isDUPLEX") Integer isDuplex, @RequestHeader(value = "Authorization", defaultValue = "") String token) {
+        log.info("copies={},printingDirection={},needPrintPagesEndIndex={},printBigValuw={},isDUPLEX={}", copies, printingDirection, needPrintPagesEndIndex, printBigValue, isDuplex);
+        if (file == null || copies == null || printingDirection == null) {
             return R.error("参数异常");
         }
         if (printBigValue == null) {
             printBigValue = 3;// 给默认
         }
-        if (StringUtils.isEmpty(numberOfPrintedPagesIndex)) {
-            numberOfPrintedPagesIndex = "all";// 给默认,默认全部打印
+        if (needPrintPagesEndIndex==null) {
+            needPrintPagesEndIndex = -1;// 给默认,默认全部打印
         }
         // 再用pdf格式开始书写,先找原始的名字
         String originName = file.getOriginalFilename();
@@ -101,7 +93,7 @@ public class PrintController {
             if (StringUtils.isEmpty(fileURL)) {
                 throw new CustomException("打印失败:commonService.uploadFileTOMinio(file);");
             }
-            boolean isPrintSuccess = printService.printsForPDF(fileURL, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, isDuplex, JWTUtil.getUserId(token));
+            boolean isPrintSuccess = printService.printsForPDF(fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex, JWTUtil.getUserId(token));
             if (isPrintSuccess) {
                 return R.success("打印成功,请稍后!");
             }
@@ -109,7 +101,7 @@ public class PrintController {
         } else if (ParamsCalibration.checkIsWord(suffix)) {
             // 保存到本地
             String newFileName = WordPrintUtil.saveComputer(file);// 本地文件均为缓存,可以手动删除
-            boolean isPrintSuccess = printService.printsForWord(newFileName, fileURL, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, isDuplex, JWTUtil.getUserId(token));
+            boolean isPrintSuccess = printService.printsForWord(newFileName, fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex, JWTUtil.getUserId(token));
             if (isPrintSuccess) {
                 return R.success("打印成功,请稍后!");
             }

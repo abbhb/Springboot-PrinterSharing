@@ -61,12 +61,10 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             return false;
         }
-        // todo: 优化: 双面打印时打印记录中记录使用纸张页数
-        // 此处等待NumberOfPrintedPagesIndex字段调整为int类型后再行更改
         // 双面打印时打印记录中记录使用纸张页数, 向上取整
-        // if (printer.getIsDuplex() == 1) {
-        //     printer.setNumberOfPrintedPagesIndex((int) Math.ceil((double) printer.getNumberOfPrintedPagesIndex() / 2));
-        // }
+         if (printer.getIsDuplex() == 1) {
+             printer.setNeedPrintPagesEndIndex((int) Math.ceil((double) printer.getNeedPrintPagesEndIndex() / 2));
+         }
         InputStream inputStream = null;
         try {
             URL url = new URL(urlName);
@@ -77,12 +75,11 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             log.error(e.getMessage());
             return false;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }finally {
+        } finally {
             try {
+                assert inputStream != null;
                 inputStream.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -124,7 +121,9 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
             printerResult.setUrl(printerItem1.getUrl());
 //            printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())); 自己的记录肯定是自己没必要
-            printerResult.setNumberOfPrintedPages(printerItem1.getNumberOfPrintedPages());
+            printerResult.setCopies(printerItem1.getCopies());
+            printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
+            printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
             printerResult.setId(String.valueOf(printerItem1.getId()));
             results.add(printerResult);
         }
@@ -167,6 +166,8 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
+            printerResult.setCopies(printerItem1.getCopies());
+            printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setUrl(printerItem1.getUrl());
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){
@@ -175,7 +176,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
                 printerResult.setCreateUser(user1.getName());
             }
 
-            printerResult.setNumberOfPrintedPages(printerItem1.getNumberOfPrintedPages());
+            printerResult.setCopies(printerItem1.getCopies());
             printerResult.setId(String.valueOf(printerItem1.getId()));
             results.add(printerResult);
         }

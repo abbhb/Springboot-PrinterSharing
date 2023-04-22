@@ -7,7 +7,7 @@ import com.qc.printers.pojo.entity.Printer;
  * 参数校验工具类
  */
 public class ParamsCalibration {
-    public static void checkBeforePrint(Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex) {
+    public static void checkBeforePrint(Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, Integer numberOfPrintedPagesIndex) {
         if (numberOfPrintedPages == null) {
             throw new CustomException("err: numberOfPrintedPages is null");
         }
@@ -69,16 +69,18 @@ public class ParamsCalibration {
        }
     }
 
-    public static Printer somePrinterParams(String oldName,String url,Integer printingDirection,Integer numberOfPrintedPages,Integer printBigValue,String numberOfPrintedPagesIndex,Integer isDuplex ,Long userId){
+    public static Printer somePrinterParams(String oldName,String url,Integer printingDirection,Integer copies,Integer printBigValue,Integer needPrintPagesEndIndex,Integer isDuplex,Integer originFilePages,Integer singleDocumentPaperUsage ,Long userId){
         Printer printer = new Printer();
         printer.setName(oldName);
         printer.setUrl(url);
         printer.setPrintingDirection(printingDirection);
-        printer.setNumberOfPrintedPages(numberOfPrintedPages);
+        printer.setCopies(copies);
         printer.setPrintBigValue(printBigValue);
-        printer.setNumberOfPrintedPagesIndex(numberOfPrintedPagesIndex);
+        printer.setSingleDocumentPaperUsage(singleDocumentPaperUsage);
+        printer.setNeedPrintPagesEndIndex(needPrintPagesEndIndex);
         printer.setCreateUser(userId);
         printer.setIsDuplex(isDuplex);
+        printer.setOriginFilePages(originFilePages);
         return printer;
     }
 }

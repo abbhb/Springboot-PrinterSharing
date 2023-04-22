@@ -15,7 +15,7 @@ public class PrinterResult implements Serializable {
     /**
      * 份数
      */
-    private Integer numberOfPrintedPages;
+    private Integer copies;
 
     /**
      * 打印方向
@@ -34,9 +34,15 @@ public class PrinterResult implements Serializable {
     private Integer printBigValue;
 
     /**
-     * 需要解析那些页码，或者all
+     * 单份文件用纸数
      */
-    private String numberOfPrintedPagesIndex;
+    private Integer singleDocumentPaperUsage;
+    /**
+     * 【单份】打印页数
+     */
+    private Integer needPrintPagesEndIndex;
+
+    private Integer originFilePages;
 
     private String contentHash;
 

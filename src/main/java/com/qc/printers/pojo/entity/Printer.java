@@ -19,7 +19,7 @@ public class Printer implements Serializable {
      * 份数
      * todo 建议变量名改为copies,
      */
-    private Integer numberOfPrintedPages;
+    private Integer copies;
 
     /**
      * 打印方向
@@ -38,10 +38,20 @@ public class Printer implements Serializable {
     private Integer printBigValue;
 
     /**
-     * 需要解析那些页码，或者all
-     * todo 类型改为integer, -1代表all, 其他代表页码截至号, 变量名改为endPage
+     * 需要打印的最后一页：起始页必定为1
+     * todo 类型改为integer, -1代表all, 其他代表页码截至号, 变量名改为needPrintPagesEndIndex
      */
-    private String numberOfPrintedPagesIndex;
+    private Integer needPrintPagesEndIndex;
+
+
+    /**
+     * 单份文件用纸数
+     */
+    private Integer singleDocumentPaperUsage;
+    /**
+     * 源文件总页数
+     */
+    private Integer originFilePages;
 
     private String contentHash;
 

@@ -11,7 +11,7 @@
                              create_user as id,
                              user.name,
                              user.avatar,
-                             sum( number_of_printed_pages * number_of_printed_pages_index ) AS total
+                             sum( copies * single_document_paper_usage ) AS total
                          FROM printer, user
                          WHERE create_user = user.id
                          GROUP BY
@@ -25,7 +25,7 @@
                              printer.create_user as id,
                              user.name,
                              user.avatar,
-                             sum( number_of_printed_pages * number_of_printed_pages_index ) AS total
+                             sum( copies * single_document_paper_usage ) AS total
                          FROM
                              printer, user
                          WHERE create_user = user.id AND(printer.create_time BETWEEN CONCAT(CURDATE(),' 00:00:00') AND CONCAT(CURDATE(),' 23:59:59'))
