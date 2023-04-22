@@ -17,6 +17,7 @@ public class Printer implements Serializable {
 
     /**
      * 份数
+     * todo 建议变量名改为copies,
      */
     private Integer numberOfPrintedPages;
 
@@ -38,6 +39,7 @@ public class Printer implements Serializable {
 
     /**
      * 需要解析那些页码，或者all
+     * todo 类型改为integer, -1代表all, 其他代表页码截至号, 变量名改为endPage
      */
     private String numberOfPrintedPagesIndex;
 
@@ -60,6 +62,6 @@ public class Printer implements Serializable {
 
     //文件地址
     private String url;
-
-
+    
+    
 }

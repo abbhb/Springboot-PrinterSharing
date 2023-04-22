@@ -61,7 +61,12 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             log.error("打印记录缺失");
             return false;
         }
-
+        // todo: 优化: 双面打印时打印记录中记录使用纸张页数
+        // 此处等待NumberOfPrintedPagesIndex字段调整为int类型后再行更改
+        // 双面打印时打印记录中记录使用纸张页数, 向上取整
+        // if (printer.getIsDuplex() == 1) {
+        //     printer.setNumberOfPrintedPagesIndex((int) Math.ceil((double) printer.getNumberOfPrintedPagesIndex() / 2));
+        // }
         InputStream inputStream = null;
         try {
             URL url = new URL(urlName);

@@ -33,8 +33,9 @@ import static com.qc.printers.utils.ParamsCalibration.somePrinterParams;
 public class PrintServiceImpl implements PrintService {
     
     private final PrinterService printerService;
-
+    
     private final MinIoProperties minIoProperties;
+    
     @Autowired
     public PrintServiceImpl(PrinterService printerService, CommonService commonService, MinIoProperties minIoProperties) {
         this.printerService = printerService;
@@ -45,42 +46,41 @@ public class PrintServiceImpl implements PrintService {
     @Override
     public boolean printsForPDF(String newName, String oldName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, @ApiParam("是否双面打印") Integer isDuplex, Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
-        if (numberOfPrintedPagesIndex.contains("-")){
+        if (numberOfPrintedPagesIndex.contains("-")) {
             String[] split = numberOfPrintedPagesIndex.split("-");
             numberOfPrintedPagesIndex = split[1];
         }
         InputStream inputStream = null;
         try {
-            URL fileURL = new URL(newName);//此处newName为文件链接url
+            URL fileURL = new URL(newName);// 此处newName为文件链接url
             inputStream = fileURL.openStream();
-            if (inputStream==null){
+            if (inputStream == null) {
                 throw new CustomException("打印:流");
             }
             PdfReader pdfReader = new PdfReader(inputStream);
             
             // 获取总页数
             int pages = pdfReader.getNumberOfPages();
-
             // 同文件多页 打印 就多次调用 printFile方法
-            // i 为页码  当找不到时就停止打印了  ， 这里动态获取页码
-            if (numberOfPrintedPagesIndex.equals("all")||numberOfPrintedPagesIndex.equals("")) {
-                PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, pages, numberOfPrintedPages, printingDirection, printBigValue,isDuplex);
+            // i 为页码  当找不到时就停止打印了, 这里动态获取页码
+            if (numberOfPrintedPagesIndex.equals("all") || numberOfPrintedPagesIndex.equals("")) {
+                PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, pages, numberOfPrintedPages, printingDirection, printBigValue, isDuplex);
                 try {
-                    //打印记录-->后期升级为rabbitmq
-                    printerService.addPrinter(somePrinterParams(oldName,newName, printingDirection, numberOfPrintedPages, printBigValue, String.valueOf(pages),isDuplex ,userId),newName);
+                    // 打印记录-->后期升级为rabbitmq
+                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, numberOfPrintedPages, printBigValue, String.valueOf(pages), isDuplex, userId), newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
                 }
                 return true;
             } else {
-                if (numberOfPrintedPagesIndex.contains("-")){
+                if (numberOfPrintedPagesIndex.contains("-")) {
                     numberOfPrintedPagesIndex = numberOfPrintedPagesIndex.split("-")[1];
                 }
-                PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, Integer.parseInt(numberOfPrintedPagesIndex), numberOfPrintedPages, printingDirection, printBigValue,isDuplex);
+                PdfPrintUtil.printFile(newName, "Brother HL-2240D series", newName, Integer.parseInt(numberOfPrintedPagesIndex), numberOfPrintedPages, printingDirection, printBigValue, isDuplex);
                 try {
-                    //打印记录
-                    printerService.addPrinter(somePrinterParams(oldName,newName, printingDirection, numberOfPrintedPages, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId),newName);
+                    // 打印记录
+                    printerService.addPrinter(somePrinterParams(oldName, newName, printingDirection, numberOfPrintedPages, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId), newName);
                 } catch (Exception e) {
                     // 捕获异常，重在打印，记录没记上算了
                     log.error("捕获异常:{}", e.getMessage());
@@ -91,23 +91,24 @@ public class PrintServiceImpl implements PrintService {
             // TODO Auto-generated catch block
             log.error("捕获异常:{}", e.getMessage());
             return false;
-        }finally {
-            if (inputStream!=null){
+        } finally {
+            if (inputStream != null) {
                 try {
                     inputStream.close();
-                }catch (IOException exp){
+                } catch (IOException exp) {
                     log.error("捕获异常:{}", exp.getMessage());
                 }
-
+                
             }
-
+            
         }
         
     }
-
-
+    
+    
     /**
      * 此处的newName是真的name
+     *
      * @param newName
      * @param originName
      * @param numberOfPrintedPages
@@ -120,17 +121,17 @@ public class PrintServiceImpl implements PrintService {
      */
     @Transactional
     @Override
-    public boolean printsForWord(String newName,String bakUrl, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Integer isDuplex,Long userId) {
+    public boolean printsForWord(String newName, String bakUrl, String originName, Integer numberOfPrintedPages, Integer printingDirection, Integer printBigValue, String numberOfPrintedPagesIndex, Integer isDuplex, Long userId) {
         checkBeforePrint(numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex);
         try {
             WordPrintUtil.wordToPDF(newName);
-            String temURL = MinIoUtil.upload(minIoProperties.getBucketName(),RandomName.getRandomName(newName)+".pdf",public_file + "\\" + newName + ".pdf");
-            log.info("imageUrl={}",temURL);
+            String temURL = MinIoUtil.upload(minIoProperties.getBucketName(), RandomName.getRandomName(newName) + ".pdf", public_file + "\\" + newName + ".pdf");
+            log.info("imageUrl={}", temURL);
             String[] split = temURL.split("\\?");
-
+            
             String fileURL = split[0];
-            log.info("路径为:{}",fileURL);
-            if (StringUtils.isEmpty(fileURL)){
+            log.info("路径为:{}", fileURL);
+            if (StringUtils.isEmpty(fileURL)) {
                 throw new CustomException("打印失败:commonService.uploadFileTOMinio(file);");
             }
             // 后面就调用pdf打印就行
@@ -138,8 +139,8 @@ public class PrintServiceImpl implements PrintService {
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-            //把打印任务交给python尝试
-            String url = "http://127.0.0.1:23456/"+"?url="+bakUrl;
+            // 把打印任务交给python尝试
+            String url = "http://127.0.0.1:23456/" + "?url=" + bakUrl;
             //         请求客户端
             RestTemplate client = new RestTemplate();
             //      发起请求
@@ -147,9 +148,9 @@ public class PrintServiceImpl implements PrintService {
             System.out.println("******** Get请求 *********");
             assert body != null;
             return printsForPDF(body, originName, numberOfPrintedPages, printingDirection, printBigValue, numberOfPrintedPagesIndex, isDuplex, userId);
-
+            
         }
     }
     
-
+    
 }
