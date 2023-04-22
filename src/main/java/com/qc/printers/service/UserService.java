@@ -7,9 +7,9 @@ import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.User;
 
 public interface UserService extends IService<User> {
-    R<UserResult> login(String username, String password);
+    R<UserResult> login(String st);
 
-    R<UserResult> loginByEmail(String email, String password);
+    R<UserResult> loginFirst(User user);
 
     R<String> createUser(User user,Long userId);
 
@@ -23,7 +23,6 @@ public interface UserService extends IService<User> {
 
     R<UserResult> updataForUserSelf(User user);
 
-    R<UserResult> changePassword(String id, String username, String password, String newpassword, String checknewpassword);
 
     R<String> updataUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 

@@ -22,13 +22,6 @@ public class User implements Serializable {
     //type属性用于设置主键生成策略，默认雪花算法
 
 
-    private String password;
-
-    /**
-     * 盐
-     */
-    private String salt;
-
     @TableField(fill = FieldFill.INSERT)//只在插入时填充
     private LocalDateTime createTime;
 

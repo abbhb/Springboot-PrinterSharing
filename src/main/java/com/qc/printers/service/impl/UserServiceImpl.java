@@ -1,5 +1,7 @@
 package com.qc.printers.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -21,29 +23,33 @@ import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.PWDMD5;
+import com.qc.printers.utils.ParamsCalibration;
 import com.qc.printers.utils.RandomName;
-import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
 
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+    private final RestTemplate restTemplate;
 
     private final IRedisService iRedisService;
 
     @Autowired
-    public UserServiceImpl(IRedisService iRedisService) {
+    public UserServiceImpl(RestTemplate restTemplate, IRedisService iRedisService) {
+        this.restTemplate = restTemplate;
         this.iRedisService = iRedisService;
     }
 
@@ -66,72 +72,100 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return super.save(entity);
     }
 
+    @Transactional
     @Override
-    public R<UserResult> login(String username, String password) {
-        if (username==null||username.equals("")){
-            return R.error("用户名不存在");
+    public R<UserResult> login(String st) {
+        if (st==null||st.equals("")){
+            return R.error("认证失败");
         }
-        if (password==null||password.equals("")){
-            return R.error("密码不存在");
+        String url2 = "http://192.168.12.122:55555/user/auth/sg";
+        //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
+        Map<String, String> map = new HashMap<>();
+        map.put("st",st);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);
+        JSONObject data = restTemplate.postForObject(url2,request, JSONObject.class);
+        Integer code = data.getInteger("code");
+        if (code!=1){
+            return R.error("认证失败");
         }
+        JSONObject userdata = data.getJSONObject("data");
+        String id = userdata.getString("id");
+        String username = userdata.getString("username");
+        String name = userdata.getString("name");
+        if (StringUtils.isEmpty(id)||StringUtils.isEmpty(name)||StringUtils.isEmpty(username)){
+            return R.error("认证失败");
+        }
+
+        log.info("userdata={}",userdata);
+        User userY = new User();
+        userY.setName(name);
+        userY.setUsername(username);
+        userY.setId(Long.valueOf(id));
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getUsername,username);
+        queryWrapper.eq(User::getId,Long.valueOf(userY.getId()));
         User one = super.getOne(queryWrapper);
         if (one==null){
-            return R.error("用户名或密码错误");
+            //用户首次访问平台,进行账号初始化
+            return this.loginFirst(userY);
         }
-        String salt = one.getSalt();
-        if (!PWDMD5.getMD5Encryption(password,salt).equals(one.getPassword())){//前端传入的明文密码加上后端的盐，处理后跟库中密码比对，一样登陆成功
-            return R.error("用户名或密码错误");
-        }
-
         if(one.getStatus() == 0){
-            return R.error("账号已禁用!");
+            throw new CustomException("账号已禁用!");
         }
-        //jwt生成token，token里面有userid，redis里存uuid
-        String uuid = RandomName.getUUID();//uuid作为key
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+        UserResult userResult = ParamsCalibration.loginUtil1(one, iRedisService);
+        return R.success(userResult);
 
-
-        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-        iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
-        return R.success(UserResult);
     }
 
+    @Transactional
     @Override
-    public R<UserResult> loginByEmail(String email, String password) {
-        if (email==null||email.equals("")){
-            return R.error("邮箱不存在");
+    public R<UserResult> loginFirst(User user) {
+        if (user==null){
+            throw new CustomException("认证失败");
         }
-        if (password==null||password.equals("")){
-            return R.error("密码不存在");
+        if (user.getId()==null||StringUtils.isEmpty(user.getUsername())||StringUtils.isEmpty(user.getName())){
+            throw new CustomException("认证失败");
+        }
+        if (StringUtils.isEmpty(user.getSex())){
+            user.setSex("男");
+        }
+        if (user.getPermission()==null){
+            //默认给用户
+            user.setPermission(2);
+        }
+        if (user.getStatus()==null){
+            user.setStatus(1);
+        }
+        //此处当系统管理员创建
+        if (StringUtils.isEmpty(user.getName())){
+            throw new CustomException("yichang");
+        }
+
+        if (StringUtils.isEmpty(user.getUsername())){
+            throw new CustomException("yichang");
+        }
+        if (user.getUsername().contains("@")){
+            throw new CustomException("不可包含'@'");
+        }
+        checkSensitiveWords(user.getName());
+        boolean save = super.save(user);
+        if (!save){
+            throw new CustomException("认证失败");
         }
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getEmail,email);
+        queryWrapper.eq(User::getId,Long.valueOf(user.getId()));
         User one = super.getOne(queryWrapper);
         if (one==null){
-            return R.error("用户名或密码错误");
+            throw new CustomException("登录业务异常!");
         }
-        String salt = one.getSalt();
-        if (!PWDMD5.getMD5Encryption(password,salt).equals(one.getPassword())){//前端传入的明文密码加上后端的盐，处理后跟库中密码比对，一样登陆成功
-            return R.error("用户名或密码错误");
-        }
-
         if(one.getStatus() == 0){
-            return R.error("账号已禁用!");
+            throw new CustomException("账号已禁用!");
         }
-        //jwt生成token，token里面有userid，redis里存uuid
-        String uuid = RandomName.getUUID();//uuid作为key
-
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
-
-
-        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-        iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
-        return R.success(UserResult);
+        UserResult userResult = ParamsCalibration.loginUtil1(one, iRedisService);
+        return R.success(userResult);
     }
+
 
     @Transactional
     @Override
@@ -146,17 +180,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(user.getUsername())){
             throw new CustomException("yichang");
         }
-        if (StringUtils.isEmpty(user.getPassword())){
-            throw new CustomException("password");
-        }
         if (!StringUtils.isEmpty(user.getEmail())){
             throw new CustomException("参数异常");
         }
         if (user.getUsername().contains("@")){
             throw new CustomException("不可包含'@'");
-        }
-        if (!user.getPassword().matches("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$")){
-            return R.error("密码必须字母加数字,8-16位");
         }
 
         if (user.getPermission().equals(1)){
@@ -166,11 +194,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         checkSensitiveWords(user.getName());
-        String password = user.getPassword();
-        String salt = PWDMD5.getSalt();
-        String md5Encryption = PWDMD5.getMD5Encryption(password,salt);
-        user.setPassword(md5Encryption);
-        user.setSalt(salt);
         boolean save = super.save(user);
         if (save){
             return R.success("创建成功");
@@ -348,56 +371,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return R.success("更新成功");
         }
         return R.error("err");
-    }
-
-    @Override
-    public R<UserResult> changePassword(String id, String username, String password, String newpassword, String checknewpassword) {
-        if (id==null){
-            return R.error(Code.DEL_TOKEN,"环境异常,强制下线");
-        }
-        if (username==null){
-            return R.error(Code.DEL_TOKEN,"环境异常,强制下线");
-        }
-        if (password==null){
-            return  R.error("请输入原密码");
-        }
-        if (newpassword==null){
-            return R.error("请输入新密码");
-        }
-        if (checknewpassword==null){
-            return R.error("请输入确认密码");
-        }
-        if (!newpassword.equals(checknewpassword)){
-            return R.error("两次密码不一致!");
-        }
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getId,Long.valueOf(id)).eq(User::getUsername,username);
-        User one = super.getOne(queryWrapper);
-        if (one==null){
-            return R.error(Code.DEL_TOKEN,"环境异常,强制下线");
-        }
-        String salt = one.getSalt();
-        if (!PWDMD5.getMD5Encryption(password,salt).equals(one.getPassword())){//前端传入的明文密码加上后端的盐，处理后跟库中密码比对，一样登陆成功
-            return R.error("原密码错误");
-        }
-
-        String newSalt = PWDMD5.getSalt();
-        String newMD5Password = PWDMD5.getMD5Encryption(newpassword,newSalt);
-        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        lambdaUpdateWrapper.eq(User::getId,Long.valueOf(id)).eq(User::getUsername,username);
-        User user = new User();
-        user.setId(Long.valueOf(id));
-        user.setUsername(username);
-        user.setPassword(newMD5Password);
-        user.setSalt(newSalt);
-//        employee.setUpdateUser(Long.valueOf(id));
-        //操作数据库更新密码和盐
-        boolean update = super.update(user, lambdaUpdateWrapper);
-        if (update){
-            return R.success("修改成功");
-        }
-
-        return R.error("修改失败");
     }
 
     @Override

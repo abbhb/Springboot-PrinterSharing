@@ -40,22 +40,22 @@ public class UserController {
     }
 
 
+    /**
+     * 2023-04-22 13:29:25 升级此接口为CAS认证
+     * @return
+     */
     @PostMapping("/login")
-    @ApiOperation(value = "登录",notes = "type:0账密登录 type:1邮箱登录")
-    public R<UserResult> login(@RequestBody Map<String, Object> user){
+    @ApiOperation(value = "登录",notes = "")
+    public R<UserResult> login(@RequestBody Map<String, Object> ticket){
         /**
          * 对密码进行加密传输
          */
-        String username = (String) user.get("username");
-        String password = (String) user.get("password");
-        int type = ParamsCalibration.booleanLoginType(username);
-        if (type==0){
-            return userService.login(username,password);
-        }else if (type==1){
-            return userService.loginByEmail(username,password);
-        }else {
-            return R.error("不符合规则");
+        String st = (String) ticket.get("st");
+        if (StringUtils.isEmpty(st)){
+            return R.error("认证失败");
         }
+        return userService.login(st);
+
 
 
     }
@@ -296,18 +296,18 @@ public class UserController {
         return userService.updataForUserSelf(user);
     }
 
-    @NeedToken
-    @PutMapping("/changepassword")
-    @ApiOperation(value = "更改用户密码")
-    public R<UserResult> changePassword(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> user){
-        System.out.println("user = " + user);
-        String id = (String) user.get("id");
-        String username = (String) user.get("username");
-        String password = (String) user.get("password");
-        String newpassword = (String) user.get("newpassword");
-        String checknewpassword = (String) user.get("checknewpassword");
-        return userService.changePassword(id,username,password,newpassword,checknewpassword);
-    }
+//    @NeedToken
+//    @PutMapping("/changepassword")
+//    @ApiOperation(value = "更改用户密码")
+//    public R<UserResult> changePassword(@RequestHeader(value="Authorization", defaultValue = "") String token,@RequestBody Map<String, Object> user){
+//        System.out.println("user = " + user);
+//        String id = (String) user.get("id");
+//        String username = (String) user.get("username");
+//        String password = (String) user.get("password");
+//        String newpassword = (String) user.get("newpassword");
+//        String checknewpassword = (String) user.get("checknewpassword");
+//        return userService.changePassword(id,username,password,newpassword,checknewpassword);
+//    }
 
 //    @NeedToken
 //    @PostMapping("/updataemployee")

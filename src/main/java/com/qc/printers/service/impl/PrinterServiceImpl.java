@@ -169,6 +169,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
+            printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
             printerResult.setUrl(printerItem1.getUrl());
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){
