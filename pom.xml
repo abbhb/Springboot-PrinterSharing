@@ -152,13 +152,7 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.16</version>
         </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacv-platform</artifactId>
-            <version>1.5.8</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/javacv-platform-1.5.8-bin/javacv-platform.jar</systemPath>
-        </dependency>
+
 
     </dependencies>
 
