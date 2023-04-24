@@ -11,6 +11,7 @@ import javax.print.DocFlavor;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.standard.Copies;
 import javax.print.attribute.standard.Sides;
 import java.awt.print.*;
 import java.io.File;
@@ -36,73 +37,73 @@ public class PdfPrintUtil {
             inputStream = fileIO.openStream();
             PDDocument document = PDDocument.load(inputStream);
             PDFPrintable printable = new PDFPrintable(document);
-            PrinterJob job = PrinterJob.getPrinterJob();
-            job.setJobName("文件:"+jobName);
-            job.setPrintable(printable);
-
-//            job.setPrintService(specifyPrinter(printService));
-            //job.setPageable(new PDFPageable(document));
-            Paper paper = new Paper();
-
-            // 设置打印纸张大小
-//            paper.setSize(595, 842); // 值为点 1 = 1/72 inch
-            // 设置打印位置与坐标
-            paper.setImageableArea(0, 0, paper.getWidth(), paper.getHeight()); // no margins
-            PageFormat pageFormat = new PageFormat();
-            pageFormat.setPaper(paper);
-            if (printingDirection==null){
-                printingDirection = PageFormat.PORTRAIT;//默认竖着打
-            }
-            pageFormat.setOrientation(printingDirection);// LANDSCAPE表示竖打;PORTRAIT表示横
-
-
-            //如果原本内容是横的就选Landscape，原内容为竖的就portrait
-            Book book = new Book();
-            /**
-             *实际大小 ACTUAL_SIZE,
-             *缩小     SHRINK_TO_FIT,
-             *拉伸     STRETCH_TO_FIT,
-             *适应     SCALE_TO_FIT;
-             **/
-            PDFPrintable pdfPrintable = null;
-            if (printBigValue.equals(3)) {
-                pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
-            } else if (printBigValue.equals(2)) {
-                pdfPrintable = new PDFPrintable(document, Scaling.STRETCH_TO_FIT);
-            }else if (printBigValue.equals(1)) {
-                pdfPrintable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT);
-            }else if (printBigValue.equals(0)){
-                pdfPrintable = new PDFPrintable(document, Scaling.ACTUAL_SIZE);
-            }else {
-                //默认适应大小
-                pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
-            }
-
-
-            // 页码
-            book.append(pdfPrintable, pageFormat, pageNum);
-
-            job.setPageable(book);
-
-
-
             //设置打印份数
             if (numberOfPrintedPages==null){
                 numberOfPrintedPages = 1;
             }
+            for (int i=0;i<numberOfPrintedPages;i++){
+                PrinterJob job = PrinterJob.getPrinterJob();
+                job.setJobName("["+numberOfPrintedPages+"]文件:"+jobName);
+                job.setPrintable(printable);
 
-            job.setCopies(numberOfPrintedPages);
-            log.info("numberOfPrintedPages = {}",numberOfPrintedPages);
-            //调用isCancelled()方法获取打印状态,如果打印被取消,返回true,否则返回false。
-            System.out.println("打印是否被取消："+job.isCancelled());
-            if (isDUPLEX.equals(1)){
-                //双面打印
-                HashPrintRequestAttributeSet hashPrintRequestAttributeSet = new HashPrintRequestAttributeSet();
-                hashPrintRequestAttributeSet.add(Sides.DUPLEX);
-                job.print(hashPrintRequestAttributeSet);
-            }else {
-                job.print();
+//            job.setPrintService(specifyPrinter(printService));
+                //job.setPageable(new PDFPageable(document));
+                Paper paper = new Paper();
+
+                // 设置打印纸张大小
+//            paper.setSize(595, 842); // 值为点 1 = 1/72 inch
+                // 设置打印位置与坐标
+                paper.setImageableArea(0, 0, paper.getWidth(), paper.getHeight()); // no margins
+                PageFormat pageFormat = new PageFormat();
+                pageFormat.setPaper(paper);
+                if (printingDirection==null){
+                    printingDirection = PageFormat.PORTRAIT;//默认竖着打
+                }
+                pageFormat.setOrientation(printingDirection);// LANDSCAPE表示竖打;PORTRAIT表示横
+
+
+                //如果原本内容是横的就选Landscape，原内容为竖的就portrait
+                Book book = new Book();
+                /**
+                 *实际大小 ACTUAL_SIZE,
+                 *缩小     SHRINK_TO_FIT,
+                 *拉伸     STRETCH_TO_FIT,
+                 *适应     SCALE_TO_FIT;
+                 **/
+                PDFPrintable pdfPrintable = null;
+                if (printBigValue.equals(3)) {
+                    pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
+                } else if (printBigValue.equals(2)) {
+                    pdfPrintable = new PDFPrintable(document, Scaling.STRETCH_TO_FIT);
+                }else if (printBigValue.equals(1)) {
+                    pdfPrintable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT);
+                }else if (printBigValue.equals(0)){
+                    pdfPrintable = new PDFPrintable(document, Scaling.ACTUAL_SIZE);
+                }else {
+                    //默认适应大小
+                    pdfPrintable = new PDFPrintable(document, Scaling.SCALE_TO_FIT);
+                }
+
+
+                // 页码
+                book.append(pdfPrintable, pageFormat, pageNum);
+
+                job.setPageable(book);
+
+//            job.setCopies(); 这样导致了连着打5张在下一张
+                log.info("numberOfPrintedPages = {}",numberOfPrintedPages);
+                //调用isCancelled()方法获取打印状态,如果打印被取消,返回true,否则返回false。
+                System.out.println("打印是否被取消："+job.isCancelled());
+                if (isDUPLEX.equals(1)){
+                    //双面打印
+                    HashPrintRequestAttributeSet hashPrintRequestAttributeSet = new HashPrintRequestAttributeSet();
+                    hashPrintRequestAttributeSet.add(Sides.DUPLEX);
+                    job.print(hashPrintRequestAttributeSet);
+                }else {
+                    job.print();
+                }
             }
+
         }  catch (IOException e) {
             log.error(e.getMessage());
         } catch (PrinterException e) {
