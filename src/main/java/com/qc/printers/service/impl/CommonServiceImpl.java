@@ -52,7 +52,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Override
-    public R<String> sendEmailCode(ToEmail toEmail, String token) {
+    public R<String> sendEmailCode(ToEmail toEmail) {
 //        SimpleMailMessage message = new SimpleMailMessage();
 //
 //        message.setFrom("3482238110@qq.com");

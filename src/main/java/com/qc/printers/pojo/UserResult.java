@@ -39,7 +39,9 @@ public class UserResult implements Serializable {
     //权限名
     private String permissionName;
 
-    private String token;
+    private String accessToken;
+
+    private String refreshToken;
 
     private String email;
 

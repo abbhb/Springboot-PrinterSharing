@@ -17,7 +17,7 @@ public interface PrinterService extends IService<Printer> {
 
     boolean addPrinter(Printer printer,String urlName);
 
-    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String token, String name, String date);
+    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date);
 
     R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user);
 

@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,6 +73,8 @@ public class CASOauthUtil {
         user.setStatus(userJSONObject.getInteger("status"));
         user.setSex(userJSONObject.getString("sex"));
         user.setName(userJSONObject.getString("name"));
+        user.setPermissionName(userJSONObject.getString("permissionName"));
+
         user.setUsername(userJSONObject.getString("username"));
         if (!StringUtils.isEmpty(studentId)){
             user.setStudentId(Long.valueOf(studentId));
@@ -119,8 +123,23 @@ public class CASOauthUtil {
             return null;
         }
 
-
-
+    }
+    public static String cookieGetValue(HttpServletRequest request, String key){
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new CustomException("好奇怪，出错了");
+        }
+        String tgc = "";
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals(key)) {
+                tgc = cookie.getValue();
+                break;
+            }
+        }
+        if (StringUtils.isEmpty(tgc)){
+            throw new CustomException("出错了");
+        }
+        return tgc;
     }
 
 }

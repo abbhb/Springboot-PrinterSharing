@@ -17,16 +17,15 @@ import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Permission;
+import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.IRedisService;
 
 import com.qc.printers.service.UserService;
-import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.PWDMD5;
-import com.qc.printers.utils.ParamsCalibration;
-import com.qc.printers.utils.RandomName;
+import com.qc.printers.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -78,93 +77,73 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (st==null||st.equals("")){
             return R.error("认证失败");
         }
-        String url2 = "http://192.168.12.122:55555/user/auth/sg";
-        //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
-        Map<String, String> map = new HashMap<>();
-        map.put("st",st);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);
-        JSONObject data = restTemplate.postForObject(url2,request, JSONObject.class);
-        Integer code = data.getInteger("code");
-        if (code!=1){
+        Token tokenByST = CASOauthUtil.getTokenByST(restTemplate, st);
+        if (tokenByST==null){
             return R.error("认证失败");
         }
-        JSONObject userdata = data.getJSONObject("data");
-        String id = userdata.getString("id");
-        String username = userdata.getString("username");
-        String name = userdata.getString("name");
-        if (StringUtils.isEmpty(id)||StringUtils.isEmpty(name)||StringUtils.isEmpty(username)){
+        User userByToken = CASOauthUtil.getUserByToken(restTemplate, tokenByST);
+        if (userByToken==null){
             return R.error("认证失败");
         }
-
-        log.info("userdata={}",userdata);
-        User userY = new User();
-        userY.setName(name);
-        userY.setUsername(username);
-        userY.setId(Long.valueOf(id));
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getId,Long.valueOf(userY.getId()));
-        User one = super.getOne(queryWrapper);
-        if (one==null){
-            //用户首次访问平台,进行账号初始化
-            return this.loginFirst(userY);
+        if (userByToken.getId()==null||StringUtils.isEmpty(userByToken.getName())||StringUtils.isEmpty(userByToken.getUsername())){
+            return R.error("认证失败");
         }
-        if(one.getStatus() == 0){
+        log.info("userdata={}",userByToken);
+        if(userByToken.getStatus() == 0){
             throw new CustomException("账号已禁用!");
         }
-        UserResult userResult = ParamsCalibration.loginUtil1(one, iRedisService);
+        UserResult userResult = new UserResult(String.valueOf(userByToken.getId()),userByToken.getUsername(),userByToken.getName(),userByToken.getPhone(),userByToken.getSex(),String.valueOf(userByToken.getStudentId()),userByToken.getStatus(),userByToken.getCreateTime(),userByToken.getUpdateTime(),userByToken.getPermission(),userByToken.getPermissionName(),tokenByST.getAccessToken(),tokenByST.getRefreshToken(),userByToken.getEmail(),userByToken.getAvatar());
         return R.success(userResult);
 
     }
 
-    @Transactional
-    @Override
-    public R<UserResult> loginFirst(User user) {
-        if (user==null){
-            throw new CustomException("认证失败");
-        }
-        if (user.getId()==null||StringUtils.isEmpty(user.getUsername())||StringUtils.isEmpty(user.getName())){
-            throw new CustomException("认证失败");
-        }
-        if (StringUtils.isEmpty(user.getSex())){
-            user.setSex("男");
-        }
-        if (user.getPermission()==null){
-            //默认给用户
-            user.setPermission(2);
-        }
-        if (user.getStatus()==null){
-            user.setStatus(1);
-        }
-        //此处当系统管理员创建
-        if (StringUtils.isEmpty(user.getName())){
-            throw new CustomException("yichang");
-        }
-
-        if (StringUtils.isEmpty(user.getUsername())){
-            throw new CustomException("yichang");
-        }
-        if (user.getUsername().contains("@")){
-            throw new CustomException("不可包含'@'");
-        }
-        checkSensitiveWords(user.getName());
-        boolean save = super.save(user);
-        if (!save){
-            throw new CustomException("认证失败");
-        }
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getId,Long.valueOf(user.getId()));
-        User one = super.getOne(queryWrapper);
-        if (one==null){
-            throw new CustomException("登录业务异常!");
-        }
-        if(one.getStatus() == 0){
-            throw new CustomException("账号已禁用!");
-        }
-        UserResult userResult = ParamsCalibration.loginUtil1(one, iRedisService);
-        return R.success(userResult);
-    }
+//    @Transactional
+//    @Override
+//    public R<UserResult> loginFirst(User user) {
+//        if (user==null){
+//            throw new CustomException("认证失败");
+//        }
+//        if (user.getId()==null||StringUtils.isEmpty(user.getUsername())||StringUtils.isEmpty(user.getName())){
+//            throw new CustomException("认证失败");
+//        }
+//        if (StringUtils.isEmpty(user.getSex())){
+//            user.setSex("男");
+//        }
+//        if (user.getPermission()==null){
+//            //默认给用户
+//            user.setPermission(2);
+//        }
+//        if (user.getStatus()==null){
+//            user.setStatus(1);
+//        }
+//        //此处当系统管理员创建
+//        if (StringUtils.isEmpty(user.getName())){
+//            throw new CustomException("yichang");
+//        }
+//
+//        if (StringUtils.isEmpty(user.getUsername())){
+//            throw new CustomException("yichang");
+//        }
+//        if (user.getUsername().contains("@")){
+//            throw new CustomException("不可包含'@'");
+//        }
+//        checkSensitiveWords(user.getName());
+//        boolean save = super.save(user);
+//        if (!save){
+//            throw new CustomException("认证失败");
+//        }
+//        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.eq(User::getId,Long.valueOf(user.getId()));
+//        User one = super.getOne(queryWrapper);
+//        if (one==null){
+//            throw new CustomException("登录业务异常!");
+//        }
+//        if(one.getStatus() == 0){
+//            throw new CustomException("账号已禁用!");
+//        }
+//        UserResult userResult = ParamsCalibration.loginUtil1(one, iRedisService);
+//        return R.success(userResult);
+//    }
 
 
     @Transactional
@@ -217,20 +196,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<UserResult> loginByToken(String token) {
-        DecodedJWT decodedJWT = JWTUtil.deToken(token);
-        Claim uuid = decodedJWT.getClaim("uuid");
-        String value = iRedisService.getValue(uuid.asString());
-        if (StringUtils.isEmpty(value)) {
-            return R.error("登录过期");
+    public R<UserResult> loginByToken(Token token) {
+        String accessToken = token.getAccessToken();
+        String refreshToken = token.getRefreshToken();
+        if (StringUtils.isEmpty(accessToken)||StringUtils.isEmpty(refreshToken)){
+            throw new CustomException("登录失败");
         }
-        User one = super.getById(Long.valueOf(value));
-        if (one==null){
+        User endUser = null;
+        Token endToken = null;
+        User userByToken = CASOauthUtil.getUserByToken(restTemplate, token);
+        if (userByToken==null){
+            //使用下刷新token试试
+            Token token1 = CASOauthUtil.refreshToken(restTemplate, token);
+            User userByToken1 = CASOauthUtil.getUserByToken(restTemplate, token1);
+            if (userByToken1==null){
+                throw new CustomException("登录失败");
+            }else {
+                endUser = userByToken1;
+                endToken = token1;
+            }
+        }else {
+            endUser = userByToken;
+            endToken = token;
+        }
+
+        if (endUser==null){
             return R.error("err");
         }
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(endUser.getPermission()));
 
-        UserResult UserResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
+        UserResult UserResult = new UserResult(String.valueOf(endUser.getId()),endUser.getUsername(),endUser.getName(),endUser.getPhone(),endUser.getSex(),String.valueOf(endUser.getStudentId()),endUser.getStatus(),endUser.getCreateTime(),endUser.getUpdateTime(),endUser.getPermission(),permission.getName(),endToken.getAccessToken(),endToken.getRefreshToken(),endUser.getEmail(),endUser.getAvatar());
         return R.success(UserResult);
     }
 
@@ -412,7 +407,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user1 = (User) user;
             Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user1.getPermission()));
 
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,user1.getEmail(),user1.getAvatar());
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,null,user1.getEmail(),user1.getAvatar());
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());

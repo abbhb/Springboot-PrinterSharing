@@ -50,20 +50,11 @@ public class QuickNavigationController {
     @GetMapping("/list")
     @ApiOperation("返回可以展导航页内容")
     //后期可以传回token拿到用户信息
-    public R<List<QuickNavigationResult>> list(@RequestHeader(value="Authorization", defaultValue = "") String token) {
-        if (StringUtils.isEmpty(token)){
-            return R.error(Code.DEL_TOKEN,"未登录");
+    public R<List<QuickNavigationResult>> list(String userId) {
+        if (StringUtils.isEmpty(userId)){
+            return R.error("传参错误");
         }
-        try {
-            DecodedJWT decodedJWT = JWTUtil.deToken(token);
-            Claim id = decodedJWT.getClaim("id");
-            Long quickNavigationId = Long.valueOf(id.asString());
-            return quickNavigationService.list(quickNavigationId);
-        }catch (Exception e){
-            log.error(e.getMessage());
-            return R.error(Code.DEL_TOKEN,"未登录");
-        }
-
+        return quickNavigationService.list(Long.valueOf(userId));
     }
 
     /**

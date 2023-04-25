@@ -2,7 +2,6 @@ package com.qc.printers.config;
 
 
 import com.qc.printers.common.JacksonObjectMapper;
-import com.qc.printers.common.interceptor.JwtTokenInterceptor;
 import com.qc.printers.common.interceptor.LoginInterceptor;
 import com.qc.printers.common.interceptor.PermissionInterceptor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +18,6 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
-    @Autowired
-    private JwtTokenInterceptor jwtTokenInterceptor;
 
     @Autowired
     private LoginInterceptor loginInterceptor;
@@ -44,7 +41,6 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册拦截规则
-        registry.addInterceptor(jwtTokenInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(1);
         registry.addInterceptor(loginInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(2);
         registry.addInterceptor(permissionInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(3);
         // 拦截路径，员工请求的路径都拦截

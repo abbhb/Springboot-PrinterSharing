@@ -4,18 +4,19 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
 
 public interface UserService extends IService<User> {
     R<UserResult> login(String st);
 
-    R<UserResult> loginFirst(User user);
+//    R<UserResult> loginFirst(User user);
 
     R<String> createUser(User user,Long userId);
 
     R<UserResult> logout(String token);
 
-    R<UserResult> loginByToken(String token);
+    R<UserResult> loginByToken(Token token);
 
     R<String> updataUserStatus(String id,String status, Long userId);
 

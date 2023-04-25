@@ -37,18 +37,7 @@ public class ParamsCalibration {
         }
     }
 
-    /**
-     * @return
-     */
-    public static UserResult loginUtil1(User one,IRedisService iRedisService){
-        //jwt生成token，token里面有userid，redis里存uuid
-        String uuid = RandomName.getUUID();//uuid作为key
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(one.getPermission()));
-        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()),uuid);
-        iRedisService.setTokenWithTime(uuid, String.valueOf(one.getId()),3600L);//token作为value，id是不允许更改的
-        UserResult userResult = new UserResult(String.valueOf(one.getId()),one.getUsername(),one.getName(),one.getPhone(),one.getSex(),String.valueOf(one.getStudentId()),one.getStatus(),one.getCreateTime(),one.getUpdateTime(),one.getPermission(),permission.getName(),token,one.getEmail(),one.getAvatar());
-        return userResult;
-    }
+
 
     /**
      * @param username

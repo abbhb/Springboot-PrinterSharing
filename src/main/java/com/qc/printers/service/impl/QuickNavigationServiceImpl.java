@@ -12,6 +12,7 @@ import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;
 import com.qc.printers.service.UserService;
+import com.qc.printers.utils.ThreadLocalUtil;
 import com.qc.printers.utils.permissionstringsplit.MySplit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,17 +39,16 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
 
     @Override
     public R<List<QuickNavigationResult>> list(Long userId) {
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            return R.error("异常1");
+        }
         if (userId==null){
             return R.error("异常");
         }
         List<QuickNavigationCategorize> quickNavigationCategorizes = quickNavigationCategorizeService.list();
         List<QuickNavigationItem> quickNavigationItems = quickNavigationItemService.list();
         List<QuickNavigationResult> quickNavigationResults = new ArrayList<>();
-
-        User userById = userService.getById(userId);
-        if (userById==null){
-            throw new CustomException("登录了吗?");
-        }
 
 
         for (QuickNavigationCategorize quickNavigationCategorize:
@@ -71,7 +71,7 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
                 quickNavigationItemResult.setType(quickNavigationItem.getType());
                 //markdown
-                quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(),userById.getPermission()));
+                quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(),currentUser.getPermission()));
                 quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
                 QuickNavigationCategorize quickNavigationCategorizeServiceById = quickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
                 if (quickNavigationCategorizeServiceById==null){

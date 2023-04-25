@@ -19,6 +19,7 @@ import com.qc.printers.service.PrinterService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.FileMD5;
 import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,22 +86,21 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
     }
 
     @Override
-    public R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String token, String name, String date) {
+    public R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date) {
         if (pageNum==null){
             return R.error("传参错误");
         }
         if (pageSize==null){
             return R.error("传参错误");
         }
-        DecodedJWT decodedJWT = JWTUtil.deToken(token);
-        Claim id = decodedJWT.getClaim("id");
-        if (id==null){
-            return R.error("缺少关键信息");
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            return R.error("系统异常");
         }
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
-        lambdaQueryWrapper.eq(Printer::getCreateUser,Long.valueOf(id.asString()));
+        lambdaQueryWrapper.eq(Printer::getCreateUser,currentUser.getId());
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
         //暂时不支持通过日期模糊查询
         Page page = super.page(pageInfo, lambdaQueryWrapper);
@@ -118,7 +118,6 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
             printerResult.setUrl(printerItem1.getUrl());
-//            printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())); 自己的记录肯定是自己没必要
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setOriginFilePages(printerItem1.getOriginFilePages());

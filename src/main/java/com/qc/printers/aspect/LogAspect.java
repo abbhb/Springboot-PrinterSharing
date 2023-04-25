@@ -10,7 +10,9 @@ import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.LogMapper;
 import com.qc.printers.pojo.entity.Log;
+import com.qc.printers.pojo.entity.User;
 import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -81,16 +83,8 @@ public class LogAspect {
 
             sysLog.setCreateTime(LocalDateTime.now()); //操作时间
             //操作用户 --登录时有把用户的信息保存在session中，可以直接取出
-            String token = (String)request.getHeader("Authorization");
-            log.info(token);
-            try {
-                DecodedJWT decodedJWT = JWTUtil.deToken(token);
-//                Claim uuid = decodedJWT.getClaim("uuid");
-                Claim cid = decodedJWT.getClaim("id");
-                sysLog.setUserId(cid.asString());
-            }catch (Exception exception){
-                exception.printStackTrace();
-            }
+            User currentUser = ThreadLocalUtil.getCurrentUser();//线程安全
+            sysLog.setUserId(String.valueOf(currentUser.getId()));
             sysLog.setIp(ServletUtil.getClientIP(request)); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
             sysLog.setUrl(request.getRequestURI()); // 请求URI
             // 方法请求的参数

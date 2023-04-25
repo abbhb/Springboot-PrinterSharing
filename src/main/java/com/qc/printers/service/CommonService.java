@@ -8,5 +8,5 @@ public interface CommonService {
 
     R<String> uploadFileTOMinio(MultipartFile file);
 
-    R<String> sendEmailCode(ToEmail toEmail,String token);
+    R<String> sendEmailCode(ToEmail toEmail);
 }

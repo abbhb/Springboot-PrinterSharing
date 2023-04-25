@@ -7,12 +7,14 @@ import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PrinterResult;
 import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
+import com.qc.printers.pojo.entity.User;
 import com.qc.printers.pojo.vo.CountTop10VO;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.ParamsCalibration;
+import com.qc.printers.utils.ThreadLocalUtil;
 import com.qc.printers.utils.WordPrintUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -56,14 +58,13 @@ public class PrintController {
      * @param printBigValue 打印大小配置号
      * @param needPrintPagesEndIndex 打印页数
      * @param isDuplex 打印模式, 单面打印为0 双面打印为1
-     * @param token token
      * @return
      */
     @CrossOrigin("*")
     @PostMapping("/uploadPrint")
     @NeedToken
     @ApiOperation(value = "打印通用接口")
-    public R<String> uploadPrint(MultipartFile file, @PathParam(value = "copies") Integer copies, @PathParam(value = "printingDirection") Integer printingDirection, @PathParam(value = "printBigValue") Integer printBigValue, @PathParam(value = "needPrintPagesEndIndex") Integer needPrintPagesEndIndex, @PathParam(value = "isDUPLEX") Integer isDuplex, @RequestHeader(value = "Authorization", defaultValue = "") String token) {
+    public R<String> uploadPrint(MultipartFile file, @PathParam(value = "copies") Integer copies, @PathParam(value = "printingDirection") Integer printingDirection, @PathParam(value = "printBigValue") Integer printBigValue, @PathParam(value = "needPrintPagesEndIndex") Integer needPrintPagesEndIndex, @PathParam(value = "isDUPLEX") Integer isDuplex) {
         log.info("copies={},printingDirection={},needPrintPagesEndIndex={},printBigValuw={},isDUPLEX={}", copies, printingDirection, needPrintPagesEndIndex, printBigValue, isDuplex);
         if (file == null || copies == null || printingDirection == null) {
             return R.error("参数异常");
@@ -73,6 +74,10 @@ public class PrintController {
         }
         if (needPrintPagesEndIndex==null) {
             needPrintPagesEndIndex = -1;// 给默认,默认全部打印
+        }
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            throw new CustomException("未登录");
         }
         // 再用pdf格式开始书写,先找原始的名字
         String originName = file.getOriginalFilename();
@@ -93,7 +98,7 @@ public class PrintController {
             if (StringUtils.isEmpty(fileURL)) {
                 throw new CustomException("打印失败:commonService.uploadFileTOMinio(file);");
             }
-            boolean isPrintSuccess = printService.printsForPDF(fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex, JWTUtil.getUserId(token));
+            boolean isPrintSuccess = printService.printsForPDF(fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex,currentUser.getId());
             if (isPrintSuccess) {
                 return R.success("打印成功,请稍后!");
             }
@@ -101,7 +106,7 @@ public class PrintController {
         } else if (ParamsCalibration.checkIsWord(suffix)) {
             // 保存到本地
             String newFileName = WordPrintUtil.saveComputer(file);// 本地文件均为缓存,可以手动删除
-            boolean isPrintSuccess = printService.printsForWord(newFileName, fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex, JWTUtil.getUserId(token));
+            boolean isPrintSuccess = printService.printsForWord(newFileName, fileURL, originName, copies, printingDirection, printBigValue, needPrintPagesEndIndex, isDuplex, currentUser.getId());
             if (isPrintSuccess) {
                 return R.success("打印成功,请稍后!");
             }
@@ -127,7 +132,7 @@ public class PrintController {
     @GetMapping("/getAllHistoryPrints")
     @NeedToken
     @PermissionCheck("1")
-    @ApiOperation(value = "获取历史打印记录", notes = "传回type参数0为自己的，1为所有人历史记录：需要有管理员权限")
+    @ApiOperation(value = "获取历史打印记录", notes = "所有人历史记录：需要有管理员权限")
     public R<PageData<PrinterResult>> getAllHistoryPrints(Integer pageNum, Integer pageSize, String name, String date, String user) {
         if (pageNum == null) {
             return R.error("传参错误");
@@ -167,7 +172,7 @@ public class PrintController {
     @GetMapping("/getMyHistoryPrints")
     @ApiOperation(value = "获取本人历史打印记录", notes = "因为没有token过不了needtoken，所以没必要再次校验token")
     @NeedToken
-    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestHeader(value = "Authorization", defaultValue = "") String token, Integer pageNum, Integer pageSize, String name, String date) {
+    public R<PageData<PrinterResult>> getMyHistoryPrints(Integer pageNum, Integer pageSize, String name, String date) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -175,6 +180,6 @@ public class PrintController {
             return R.error("传参错误");
         }
         
-        return printerService.listPrinter(pageNum, pageSize, token, name, date);
+        return printerService.listPrinter(pageNum, pageSize, name, date);
     }
 }
