@@ -75,18 +75,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public R<UserResult> login(String st) {
         if (st==null||st.equals("")){
-            return R.error("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         Token tokenByST = CASOauthUtil.getTokenByST(restTemplate, st);
         if (tokenByST==null){
-            return R.error("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         User userByToken = CASOauthUtil.getUserByToken(restTemplate, tokenByST);
         if (userByToken==null){
-            return R.error("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         if (userByToken.getId()==null||StringUtils.isEmpty(userByToken.getName())||StringUtils.isEmpty(userByToken.getUsername())){
-            return R.error("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         log.info("userdata={}",userByToken);
         if(userByToken.getStatus() == 0){
@@ -200,7 +200,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String accessToken = token.getAccessToken();
         String refreshToken = token.getRefreshToken();
         if (StringUtils.isEmpty(accessToken)||StringUtils.isEmpty(refreshToken)){
-            throw new CustomException("登录失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         User endUser = null;
         Token endToken = null;
@@ -210,7 +210,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             Token token1 = CASOauthUtil.refreshToken(restTemplate, token);
             User userByToken1 = CASOauthUtil.getUserByToken(restTemplate, token1);
             if (userByToken1==null){
-                throw new CustomException("登录失败");
+                throw new CustomException("认证失败",Code.DEL_TOKEN);
             }else {
                 endUser = userByToken1;
                 endToken = token1;

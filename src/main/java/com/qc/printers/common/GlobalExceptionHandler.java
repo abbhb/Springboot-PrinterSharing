@@ -1,5 +1,7 @@
 package com.qc.printers.common;
 
+import cn.hutool.http.HttpResponse;
+import com.qc.printers.utils.CookieManger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -7,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 /**
@@ -35,7 +38,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomException.class)
-    public R<String> customExceptionHandler(CustomException e) {
+    public R<String> customExceptionHandler(CustomException e, HttpServletResponse response) {
+        if (e.getCode()!=null){
+            if (e.getCode().equals(Code.DEL_TOKEN)){
+                //token过期了
+                CookieManger.cleanARCookie(response);
+                return R.error(Code.DEL_TOKEN,e.getMessage());
+            }
+        }
         return R.error(e.getMessage());
     }
 

@@ -1,6 +1,7 @@
 package com.qc.printers.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.entity.Token;
@@ -51,7 +52,7 @@ public class CASOauthUtil {
      */
     public static User getUserByToken(RestTemplate restTemplate,Token token){
         if (restTemplate==null||token==null){
-            throw new CustomException("认证失败");
+            throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
         String url2 = "http://10.15.245.153:55555/api2/oauth/accesstoken/";
         Map<String, String> map = new HashMap<>();
@@ -97,7 +98,7 @@ public class CASOauthUtil {
      */
     public static Token refreshToken(RestTemplate restTemplate,Token token){
         if (restTemplate==null||token==null){
-            throw new CustomException("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         String url2 = "http://10.15.245.153:55555/api2/oauth/refreshtoken/";
         //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
@@ -110,7 +111,7 @@ public class CASOauthUtil {
         Integer code = jsonObject.getInteger("code");
         Token tokenr = jsonObject.getObject("data",Token.class);
         if (tokenr==null|| StringUtils.isEmpty(tokenr.getAccessToken())){
-            throw new CustomException("认证失败");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         if (code==1){
             //续期,token没过期
@@ -127,7 +128,7 @@ public class CASOauthUtil {
     public static String cookieGetValue(HttpServletRequest request, String key){
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            throw new CustomException("好奇怪，出错了");
+            throw new CustomException("认证失败(Cookies为空)",Code.DEL_TOKEN);
         }
         String tgc = "";
         for (Cookie cookie : cookies) {
@@ -137,7 +138,7 @@ public class CASOauthUtil {
             }
         }
         if (StringUtils.isEmpty(tgc)){
-            throw new CustomException("出错了");
+            throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
         return tgc;
     }
