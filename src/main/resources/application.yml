@@ -1,5 +1,8 @@
 server:
-  port: 8080
+  port: 55550
+  servlet:
+    # Controller统一前缀
+    context-path: /api
 spring:
   application:
     name: printes
