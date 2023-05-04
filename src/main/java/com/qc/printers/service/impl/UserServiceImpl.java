@@ -44,6 +44,9 @@ import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     private final RestTemplate restTemplate;
 
+    @Autowired
+    private CASOauthUtil casOauthUtil;
+
     private final IRedisService iRedisService;
 
     @Autowired
@@ -77,11 +80,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (st==null||st.equals("")){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        Token tokenByST = CASOauthUtil.getTokenByST(restTemplate, st);
+        Token tokenByST = casOauthUtil.getTokenByST(restTemplate, st);
         if (tokenByST==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        User userByToken = CASOauthUtil.getUserByToken(restTemplate, tokenByST);
+        User userByToken = casOauthUtil.getUserByToken(restTemplate, tokenByST);
         if (userByToken==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
@@ -204,11 +207,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         User endUser = null;
         Token endToken = null;
-        User userByToken = CASOauthUtil.getUserByToken(restTemplate, token);
+        User userByToken = casOauthUtil.getUserByToken(restTemplate, token);
         if (userByToken==null){
             //使用下刷新token试试
-            Token token1 = CASOauthUtil.refreshToken(restTemplate, token);
-            User userByToken1 = CASOauthUtil.getUserByToken(restTemplate, token1);
+            Token token1 = casOauthUtil.refreshToken(restTemplate, token);
+            User userByToken1 = casOauthUtil.getUserByToken(restTemplate, token1);
             if (userByToken1==null){
                 throw new CustomException("认证失败",Code.DEL_TOKEN);
             }else {

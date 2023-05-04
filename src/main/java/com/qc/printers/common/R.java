@@ -21,6 +21,8 @@ public class R<T> {
 
     private Map map = new HashMap();//动态数据
 
+    private static String suffix = "[来自Printers服务器]";
+
     public static <T> R<T> success(T object) {
         R<T> r = new R<T>();
         r.data = object;
@@ -36,7 +38,7 @@ public class R<T> {
     }
     public static <T> R<T> success(String msg) {
         R<T> r = new R<T>();
-        r.msg = msg;
+        r.msg = msg + suffix;
         r.code = 1;
         return r;
     }
@@ -45,21 +47,21 @@ public class R<T> {
 
     public static <T> R<T> successOnlyMsg(String msg,Integer code) {
         R<T> r = new R<T>();
-        r.msg = msg;
+        r.msg = msg + suffix;
         r.code = code;
         return r;
     }
 
     public static <T> R<T> error(String msg) {
         R r = new R();
-        r.msg = msg;
+        r.msg = msg + suffix;
         r.code = 0;
         return r;
     }
 
     public static <T> R<T> error(Integer code,String msg) {
         R r = new R();
-        r.msg = msg;
+        r.msg = msg + suffix;
         r.code = code;
         return r;
     }

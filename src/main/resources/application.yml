@@ -31,3 +31,7 @@ minio:
   accessKey: N2T6ZfARSupeUYbn
   secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
   bucketName: aistudio
+
+# ====================== ↓↓↓↓↓↓ CAS认证相关配置 ↓↓↓↓↓↓ #############################################
+cas:
+  baseUrl: http://10.15.245.153:55555/

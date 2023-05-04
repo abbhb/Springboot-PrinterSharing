@@ -27,3 +27,4 @@
 + swagger在上线前最好关掉 在主函数上注释掉注解即可
 + minio 报连接错误可能是时区问题，minio需要美国1时区
 + token 存在cookies 方便管理
++ 运行前需要将根目录下的libs的jar包导入项目的resources,将dll导入jre/bin目录,高版本java放在jdk/bin下方

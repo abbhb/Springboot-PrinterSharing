@@ -35,6 +35,9 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private CASOauthUtil casOauthUtil;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (HttpMethod.OPTIONS.toString().equals(request.getMethod())) {
@@ -53,8 +56,8 @@ public class LoginInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String accessToken = CASOauthUtil.cookieGetValue(request, MyString.pre_cookie_access_token);
-        String refreshToken = CASOauthUtil.cookieGetValue(request, MyString.pre_cookie_refresh_token);
+        String accessToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_access_token);
+        String refreshToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_refresh_token);
 
         /**
          * 后期加缓存
@@ -62,15 +65,15 @@ public class LoginInterceptor implements HandlerInterceptor {
         Token token = new Token();
         token.setAccessToken(accessToken);
         token.setRefreshToken(refreshToken);
-        User userByToken = CASOauthUtil.getUserByToken(restTemplate, token);
+        User userByToken = casOauthUtil.getUserByToken(restTemplate, token);
         if (userByToken==null){
-            Token token1 = CASOauthUtil.refreshToken(restTemplate, token);
+            Token token1 = casOauthUtil.refreshToken(restTemplate, token);
             if (token1==null){
                 return false;
             }
             //说明刷新到了
             CookieManger.setARCookie(response,token1.getAccessToken(),token1.getRefreshToken());
-            userByToken = CASOauthUtil.getUserByToken(restTemplate, token);
+            userByToken = casOauthUtil.getUserByToken(restTemplate, token);
             if (userByToken==null){
                 //这样也是没有认证成功的
                 return false;

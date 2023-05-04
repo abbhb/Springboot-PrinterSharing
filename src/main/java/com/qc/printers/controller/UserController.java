@@ -1,35 +1,20 @@
 package com.qc.printers.controller;
 
-import com.auth0.jwt.exceptions.JWTDecodeException;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.qc.printers.common.CustomException;
 import com.qc.printers.common.MyString;
-import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
-import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.ToEmail;
 import com.qc.printers.pojo.entity.Token;
-import com.qc.printers.pojo.entity.User;
-import com.qc.printers.service.CommonService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
 import com.qc.printers.utils.CookieManger;
-import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.ParamsCalibration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
@@ -39,9 +24,11 @@ import java.util.Map;
 @Slf4j
 public class UserController {
     private final UserService userService;
+    private final CASOauthUtil casOauthUtil;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, CASOauthUtil casOauthUtil) {
         this.userService = userService;
+        this.casOauthUtil = casOauthUtil;
     }
 
 
@@ -67,8 +54,8 @@ public class UserController {
     @PostMapping("/loginbytoken")
     @ApiOperation(value = "token校验",notes = "没过期就等效登录")
     public R<UserResult> loginByToken(HttpServletRequest request, HttpServletResponse response){
-        String accessToken = CASOauthUtil.cookieGetValue(request, MyString.pre_cookie_access_token);
-        String refreshToken = CASOauthUtil.cookieGetValue(request, MyString.pre_cookie_refresh_token);
+        String accessToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_access_token);
+        String refreshToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_refresh_token);
         Token token = new Token();
        token.setAccessToken(accessToken);
        token.setRefreshToken(refreshToken);

@@ -3,10 +3,11 @@ package com.qc.printers.utils;
 import com.alibaba.fastjson.JSONObject;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.R;
+import com.qc.printers.config.CASConfig;
 import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,14 +19,22 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * 在Spring中不推荐使用静态方法
+ * 无法进行注入
+ * 可以使用@Component进行托管给IOC容器
+ */
 @Component
 public class CASOauthUtil {
+    @Autowired
+    private CASConfig casConfig;
 
-    public static Token getTokenByST(RestTemplate restTemplate,String st){
+    public Token getTokenByST(RestTemplate restTemplate,String st){
         if (restTemplate==null){
             throw new CustomException("认证失败");
         }
-        String url2 = "http://10.15.245.153:55555/api2/oauth/";
+        String url2 = casConfig.getBaseUrl() + "api2/oauth/";
         //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
         Map<String, String> map = new HashMap<>();
         map.put("st",st);
@@ -50,11 +59,11 @@ public class CASOauthUtil {
      * @param token
      * @return
      */
-    public static User getUserByToken(RestTemplate restTemplate,Token token){
+    public User getUserByToken(RestTemplate restTemplate,Token token){
         if (restTemplate==null||token==null){
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        String url2 = "http://10.15.245.153:55555/api2/oauth/accesstoken/";
+        String url2 = casConfig.getBaseUrl() + "api2/oauth/accesstoken/";
         Map<String, String> map = new HashMap<>();
         map.put("accessToken",token.getAccessToken());
         HttpHeaders headers = new HttpHeaders();
@@ -96,11 +105,11 @@ public class CASOauthUtil {
      * @param token
      * @return
      */
-    public static Token refreshToken(RestTemplate restTemplate,Token token){
+    public Token refreshToken(RestTemplate restTemplate,Token token){
         if (restTemplate==null||token==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        String url2 = "http://10.15.245.153:55555/api2/oauth/refreshtoken/";
+        String url2 = casConfig.getBaseUrl() + "api2/oauth/refreshtoken/";
         //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
         Map<String, String> map = new HashMap<>();
         map.put("refreshToken",token.getRefreshToken());
@@ -125,7 +134,7 @@ public class CASOauthUtil {
         }
 
     }
-    public static String cookieGetValue(HttpServletRequest request, String key){
+    public String cookieGetValue(HttpServletRequest request, String key){
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             throw new CustomException("认证失败(Cookies为空)",Code.DEL_TOKEN);
