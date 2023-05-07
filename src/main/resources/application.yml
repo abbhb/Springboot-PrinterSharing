@@ -27,11 +27,11 @@ mybatis-plus:
       id-type: ASSIGN_ID
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
-  url: http://10.15.245.153:9090
+  url: http://10.15.245.1:9090
   accessKey: N2T6ZfARSupeUYbn
   secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
   bucketName: aistudio
 
 # ====================== ↓↓↓↓↓↓ CAS认证相关配置 ↓↓↓↓↓↓ #############################################
 cas:
-  baseUrl: http://10.15.245.153:55555/
+  baseUrl: http://10.15.245.1:55555/
