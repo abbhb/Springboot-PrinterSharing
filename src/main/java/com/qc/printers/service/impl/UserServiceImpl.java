@@ -1,7 +1,5 @@
 package com.qc.printers.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -25,14 +23,9 @@ import com.qc.printers.service.UserService;
 import com.qc.printers.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -76,15 +69,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Transactional
     @Override
-    public R<UserResult> login(String st) {
-        if (st==null||st.equals("")){
+    public R<UserResult> login(String code) {
+        if (code==null||code.equals("")){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        Token tokenByST = casOauthUtil.getTokenByST(restTemplate, st);
-        if (tokenByST==null){
+        Token tokenByCode = casOauthUtil.getTokenByCode(restTemplate, code);
+        if (tokenByCode==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        User userByToken = casOauthUtil.getUserByToken(restTemplate, tokenByST);
+        User userByToken = casOauthUtil.getUserByToken(restTemplate, tokenByCode);
         if (userByToken==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
@@ -95,7 +88,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if(userByToken.getStatus() == 0){
             throw new CustomException("账号已禁用!");
         }
-        UserResult userResult = new UserResult(String.valueOf(userByToken.getId()),userByToken.getUsername(),userByToken.getName(),userByToken.getPhone(),userByToken.getSex(),String.valueOf(userByToken.getStudentId()),userByToken.getStatus(),userByToken.getCreateTime(),userByToken.getUpdateTime(),userByToken.getPermission(),userByToken.getPermissionName(),tokenByST.getAccessToken(),tokenByST.getRefreshToken(),userByToken.getEmail(),userByToken.getAvatar());
+        UserResult userResult = new UserResult(String.valueOf(userByToken.getId()),userByToken.getUsername(),userByToken.getName(),userByToken.getPhone(),userByToken.getSex(),String.valueOf(userByToken.getStudentId()),userByToken.getStatus(),userByToken.getCreateTime(),userByToken.getUpdateTime(),userByToken.getPermission(),userByToken.getPermissionName(),tokenByCode.getAccessToken(),tokenByCode.getRefreshToken(),userByToken.getEmail(),userByToken.getAvatar());
         return R.success(userResult);
 
     }

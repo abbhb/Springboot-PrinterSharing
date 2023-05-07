@@ -9,4 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "cas")
 public class CASConfig {
     private String baseUrl;
+
+    private String clientId;
+
+    private String clientSecret;
 }

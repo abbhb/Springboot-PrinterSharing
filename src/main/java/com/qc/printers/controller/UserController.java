@@ -39,14 +39,15 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation(value = "登录",notes = "")
     public R<UserResult> login(@RequestBody Map<String, Object> ticket,HttpServletResponse response){
+        log.info("ticket:{}",ticket);
         /**
          * 对密码进行加密传输
          */
-        String st = (String) ticket.get("st");
-        if (StringUtils.isEmpty(st)){
+        String code = (String) ticket.get("code");
+        if (StringUtils.isEmpty(code)){
             return R.error("认证失败");
         }
-        R<UserResult> login = userService.login(st);
+        R<UserResult> login = userService.login(code);
         CookieManger.setARCookie(response,login.getData().getAccessToken(),login.getData().getRefreshToken());
         return login;
     }

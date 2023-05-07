@@ -8,7 +8,7 @@ import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
 
 public interface UserService extends IService<User> {
-    R<UserResult> login(String st);
+    R<UserResult> login(String code);
 
 //    R<UserResult> loginFirst(User user);
 
