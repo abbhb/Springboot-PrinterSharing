@@ -2,8 +2,10 @@ package com.qc.printers.controller;
 
 import com.qc.printers.common.MyString;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.Token;
+import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
 import com.qc.printers.utils.CookieManger;
@@ -24,10 +26,13 @@ import java.util.Map;
 @Slf4j
 public class UserController {
     private final UserService userService;
+
+    private final TrLoginService trLoginService;
     private final CASOauthUtil casOauthUtil;
 
-    public UserController(UserService userService, CASOauthUtil casOauthUtil) {
+    public UserController(UserService userService, TrLoginService trLoginService, CASOauthUtil casOauthUtil) {
         this.userService = userService;
+        this.trLoginService = trLoginService;
         this.casOauthUtil = casOauthUtil;
     }
 
@@ -47,24 +52,14 @@ public class UserController {
         if (StringUtils.isEmpty(code)){
             return R.error("认证失败");
         }
-        R<UserResult> login = userService.login(code);
-        CookieManger.setARCookie(response,login.getData().getAccessToken(),login.getData().getRefreshToken());
-        return login;
+        return trLoginService.casLogin(code);
     }
 
+    @NeedToken
     @PostMapping("/loginbytoken")
     @ApiOperation(value = "token校验",notes = "没过期就等效登录")
-    public R<UserResult> loginByToken(HttpServletRequest request, HttpServletResponse response){
-        String accessToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_access_token);
-        String refreshToken = casOauthUtil.cookieGetValue(request, MyString.pre_cookie_refresh_token);
-        Token token = new Token();
-       token.setAccessToken(accessToken);
-       token.setRefreshToken(refreshToken);
-        R<UserResult> userResultR = userService.loginByToken(token);
-        if (!userResultR.getData().getAccessToken().equals(accessToken)){
-            //说明期间刷新并且成功刷新了token
-            CookieManger.setARCookie(response,userResultR.getData().getAccessToken(),userResultR.getData().getRefreshToken());
-        }
+    public R<UserResult> loginByToken(){
+        R<UserResult> userResultR = userService.loginByToken();
         return userResultR;
     }
 }

@@ -80,8 +80,6 @@ public class CASOauthUtil {
         user.setStatus(userJSONObject.getInteger("status"));
         user.setSex(userJSONObject.getString("sex"));
         user.setName(userJSONObject.getString("name"));
-        user.setPermissionName(userJSONObject.getString("permissionName"));
-
         user.setUsername(userJSONObject.getString("username"));
         if (!StringUtils.isEmpty(studentId)){
             user.setStudentId(Long.valueOf(studentId));
@@ -94,6 +92,20 @@ public class CASOauthUtil {
             user.setPermission(Integer.valueOf(permission));
         }
         return user;
+    }
+
+    public JSONObject getUserObjectByToken(RestTemplate restTemplate,Token token){
+        if (restTemplate==null||token==null){
+            throw new CustomException("认证失败", Code.DEL_TOKEN);
+        }
+        String url2 = casConfig.getBaseUrl() + "oauth2/me/?accessToken="+token.getAccessToken();
+        JSONObject jsonObject = restTemplate.getForObject(url2, JSONObject.class);
+        Integer code = jsonObject.getInteger("code");
+        if (code!=1){
+            return null;
+        }
+        JSONObject userJSONObject = jsonObject.getObject("data",JSONObject.class);
+        return userJSONObject;
     }
 
     /**
@@ -131,22 +143,6 @@ public class CASOauthUtil {
         }
 
     }
-    public String cookieGetValue(HttpServletRequest request, String key){
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            throw new CustomException("认证失败(Cookies为空)",Code.DEL_TOKEN);
-        }
-        String tgc = "";
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(key)) {
-                tgc = cookie.getValue();
-                break;
-            }
-        }
-        if (StringUtils.isEmpty(tgc)){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        return tgc;
-    }
+
 
 }

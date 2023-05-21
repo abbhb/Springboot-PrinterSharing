@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class JWTUtil {
-    private final static String secret_key = "reggit20230113.FfG!D3a2AcfrF.2u0C1";
+    private final static String secret_key = "asdt20230113.FfG!D3a2AcfrF.2u0C1";
     /**
      * 生成加密后的token
      * @param id ID字符串
@@ -63,7 +63,7 @@ public class JWTUtil {
      * @param token 字符串token
      * @return 解密后的DecodedJWT对象，可以读取token中的数据。
      */
-    public static DecodedJWT deToken(final String token) {
+    public static DecodedJWT deToken(String token) {
         DecodedJWT jwt = null;
         try {
             // 使用了HMAC256加密算法。

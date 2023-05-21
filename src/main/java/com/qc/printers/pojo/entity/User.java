@@ -64,6 +64,4 @@ public class User implements Serializable {
 
     @ApiModelProperty(value = "头像")
     private String avatar;
-
-    private String permissionName;
 }

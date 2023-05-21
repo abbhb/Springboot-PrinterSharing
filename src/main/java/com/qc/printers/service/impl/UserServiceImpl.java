@@ -1,5 +1,6 @@
 package com.qc.printers.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -67,31 +68,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return super.save(entity);
     }
 
-    @Transactional
-    @Override
-    public R<UserResult> login(String code) {
-        if (code==null||code.equals("")){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        Token tokenByCode = casOauthUtil.getTokenByCode(restTemplate, code);
-        if (tokenByCode==null){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        User userByToken = casOauthUtil.getUserByToken(restTemplate, tokenByCode);
-        if (userByToken==null){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        if (userByToken.getId()==null||StringUtils.isEmpty(userByToken.getName())||StringUtils.isEmpty(userByToken.getUsername())){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        log.info("userdata={}",userByToken);
-        if(userByToken.getStatus() == 0){
-            throw new CustomException("账号已禁用!");
-        }
-        UserResult userResult = new UserResult(String.valueOf(userByToken.getId()),userByToken.getUsername(),userByToken.getName(),userByToken.getPhone(),userByToken.getSex(),String.valueOf(userByToken.getStudentId()),userByToken.getStatus(),userByToken.getCreateTime(),userByToken.getUpdateTime(),userByToken.getPermission(),userByToken.getPermissionName(),tokenByCode.getAccessToken(),tokenByCode.getRefreshToken(),userByToken.getEmail(),userByToken.getAvatar());
-        return R.success(userResult);
-
-    }
+//    @Transactional
+//    @Override
+//    public R<UserResult> login(String code) {
+//        if (code==null||code.equals("")){
+//            throw new CustomException("认证失败",Code.DEL_TOKEN);
+//        }
+//        Token tokenByCode = casOauthUtil.getTokenByCode(restTemplate, code);
+//        if (tokenByCode==null){
+//            throw new CustomException("认证失败",Code.DEL_TOKEN);
+//        }
+//        JSONObject userObjectByToken = casOauthUtil.getUserObjectByToken(restTemplate, tokenByCode);
+//        if (userObjectByToken==null){
+//            throw new CustomException("认证失败",Code.DEL_TOKEN);
+//        }
+//        String openid = userObjectByToken.getString("openid");
+//
+//        if (userByToken==null){
+//            throw new CustomException("认证失败",Code.DEL_TOKEN);
+//        }
+//        if (userByToken.getId()==null||StringUtils.isEmpty(userByToken.getName())||StringUtils.isEmpty(userByToken.getUsername())){
+//            throw new CustomException("认证失败",Code.DEL_TOKEN);
+//        }
+//        log.info("userdata={}",userByToken);
+//        if(userByToken.getStatus() == 0){
+//            throw new CustomException("账号已禁用!");
+//        }
+//        UserResult userResult = new UserResult(String.valueOf(userByToken.getId()),userByToken.getUsername(),userByToken.getName(),userByToken.getPhone(),userByToken.getSex(),String.valueOf(userByToken.getStudentId()),userByToken.getStatus(),userByToken.getCreateTime(),userByToken.getUpdateTime(),userByToken.getPermission(),userByToken.getPermissionName(),tokenByCode.getAccessToken(),tokenByCode.getRefreshToken(),userByToken.getEmail(),userByToken.getAvatar());
+//        return R.success(userResult);
+//
+//    }
 
 //    @Transactional
 //    @Override
@@ -192,36 +198,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<UserResult> loginByToken(Token token) {
-        String accessToken = token.getAccessToken();
-        String refreshToken = token.getRefreshToken();
-        if (StringUtils.isEmpty(accessToken)||StringUtils.isEmpty(refreshToken)){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
-        }
-        User endUser = null;
-        Token endToken = null;
-        User userByToken = casOauthUtil.getUserByToken(restTemplate, token);
-        if (userByToken==null){
-            //使用下刷新token试试
-            Token token1 = casOauthUtil.refreshToken(restTemplate, token);
-            User userByToken1 = casOauthUtil.getUserByToken(restTemplate, token1);
-            if (userByToken1==null){
-                throw new CustomException("认证失败",Code.DEL_TOKEN);
-            }else {
-                endUser = userByToken1;
-                endToken = token1;
-            }
-        }else {
-            endUser = userByToken;
-            endToken = token;
+    public R<UserResult> loginByToken() {
+
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            return R.error(Code.DEL_TOKEN,"登陆过期");
         }
 
-        if (endUser==null){
-            return R.error("err");
-        }
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(endUser.getPermission()));
 
-        UserResult UserResult = new UserResult(String.valueOf(endUser.getId()),endUser.getUsername(),endUser.getName(),endUser.getPhone(),endUser.getSex(),String.valueOf(endUser.getStudentId()),endUser.getStatus(),endUser.getCreateTime(),endUser.getUpdateTime(),endUser.getPermission(),permission.getName(),endToken.getAccessToken(),endToken.getRefreshToken(),endUser.getEmail(),endUser.getAvatar());
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+
+        UserResult UserResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(),permission.getName(),null,currentUser.getEmail(),currentUser.getAvatar());
         return R.success(UserResult);
     }
 
@@ -403,7 +390,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user1 = (User) user;
             Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user1.getPermission()));
 
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,null,user1.getEmail(),user1.getAvatar());
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,user1.getEmail(),user1.getAvatar());
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());

@@ -42,7 +42,6 @@ public class GlobalExceptionHandler {
         if (e.getCode()!=null){
             if (e.getCode().equals(Code.DEL_TOKEN)){
                 //token过期了
-                CookieManger.cleanARCookie(response);
                 return R.error(Code.DEL_TOKEN,e.getMessage());
             }
         }

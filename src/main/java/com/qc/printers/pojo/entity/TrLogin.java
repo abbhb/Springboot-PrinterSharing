@@ -12,7 +12,7 @@ public class TrLogin implements Serializable {
     private Long id;
 
     //第三方平台ID
-    private Long trId;
+    private String trId;
 
     //当前系统的userId
     private Long userId;
@@ -28,6 +28,7 @@ public class TrLogin implements Serializable {
      * 关键参数
      * 标识第三方
      * 1：ENRoom
+     * 2:CAS-oauth2.0
      */
     private Integer type;
 }
