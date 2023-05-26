@@ -43,6 +43,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (HttpMethod.OPTIONS.toString().equals(request.getMethod())) {
             System.out.println("OPTIONS请求，放行");
+            System.out.println(request.getRequestURI());
             return true;
         }
         //如果不是映射到方法直接通过
@@ -56,15 +57,21 @@ public class LoginInterceptor implements HandlerInterceptor {
             //权限校验直接通过
             return true;
         }
-        String token = request.getHeader("Authorization");
-        log.info("token:{}",token);
+        final String authHeader = request.getHeader(JWTUtil.AUTH_HEADER_KEY);
+        log.info("## authHeader= {}", authHeader);
+        if (StringUtils.isBlank(authHeader) || !authHeader.startsWith(JWTUtil.TOKEN_PREFIX)) {
+            log.info("### 用户未登录，请先登录 ###");
+            throw new CustomException("请先登录!",Code.DEL_TOKEN);
+        }
+        // 获取token
+        final String token = authHeader.substring(7);
         if (StringUtils.isEmpty(token)){
-            //没有tgc
-            return false;
+            //没有JWTtoken
+            throw new CustomException("请先登录!",Code.DEL_TOKEN);
         }
         DecodedJWT decodedJWT = JWTUtil.deToken(token);
-        Claim uuid = decodedJWT.getClaim("uuid");
-        String userId = iRedisService.getValue(uuid.asString());
+        log.info("### 解析token= {}", token);
+        String userId = iRedisService.getValue(token);
         if (StringUtils.isEmpty(userId)){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }

@@ -14,17 +14,19 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class JWTUtil {
+    public static final String AUTH_HEADER_KEY = "Authorization";
+    public static final String TOKEN_PREFIX = "Bearer ";
     private final static String secret_key = "asdt20230113.FfG!D3a2AcfrF.2u0C1";
     /**
      * 生成加密后的token
      * @param id ID字符串
      * @return 加密后的token
      */
-    public static String getToken(String id, String permissions,String uuid) {
+    public static String getToken(String id, String permissions) {
         String token = null;
         try {//60L *
 //            Date expiresAt = new Date(System.currentTimeMillis()+ 1L*60L * 1000L);//token 60分钟内必须刷新，后期加个刷新令牌，刷新令牌放redis里
-            token = JWT.create().withIssuer("auth0").withClaim("id", id).withClaim("permissions", permissions).withClaim("uuid", uuid)
+            token = JWT.create().withIssuer("auth0").withClaim("id", id).withClaim("permissions", permissions)
                     // 使用了HMAC256加密算法。
                     // mysecret是用来加密数字签名的密钥。
                     .sign(Algorithm.HMAC256(secret_key));

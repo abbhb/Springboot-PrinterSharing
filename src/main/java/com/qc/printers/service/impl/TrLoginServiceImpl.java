@@ -6,20 +6,17 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.MyString;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.TrLoginMapper;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.Permission;
 import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.TrLogin;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
 import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.RandomName;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +45,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
 
     @Transactional
     @Override
-    public R<UserResult> casLogin(String code) {
+    public R<LoginRes> casLogin(String code) {
         if (code==null||code.equals("")){
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
@@ -70,23 +67,23 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
             if (byId==null){
                 throw new CustomException("认证失败",Code.DEL_TOKEN);
             }
-            UserResult userResult = new UserResult();
-            userResult.setId(String.valueOf(byId.getId()));
-            userResult.setUsername(byId.getUsername());
-            userResult.setName(byId.getName());
-            userResult.setPhone(byId.getPhone());
-            userResult.setSex(byId.getSex());
-            userResult.setStudentId(String.valueOf(byId.getStudentId()));
-            userResult.setStatus(byId.getStatus());
-            userResult.setCreateTime(byId.getCreateTime());
-            userResult.setUpdateTime(byId.getUpdateTime());
-            userResult.setPermission(byId.getPermission());
-            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(byId.getPermission()));
-
-            userResult.setPermissionName(permission.getName());
-            String uuid = RandomName.getUUID();
-            String token = JWTUtil.getToken(userResult.getId(), String.valueOf(permission.getId()), uuid);
-            iRedisService.setTokenWithTime(uuid,userResult.getId(),3600L);
+//            UserResult userResult = new UserResult();
+//            userResult.setId(String.valueOf(byId.getId()));
+//            userResult.setUsername(byId.getUsername());
+//            userResult.setName(byId.getName());
+//            userResult.setPhone(byId.getPhone());
+//            userResult.setSex(byId.getSex());
+//            userResult.setStudentId(String.valueOf(byId.getStudentId()));
+//            userResult.setStatus(byId.getStatus());
+//            userResult.setCreateTime(byId.getCreateTime());
+//            userResult.setUpdateTime(byId.getUpdateTime());
+//            userResult.setPermission(byId.getPermission());
+//            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(byId.getPermission()));
+//
+//            userResult.setPermissionName(permission.getName());
+            String token = JWTUtil.getToken(String.valueOf(byId.getId()), String.valueOf(byId.getPermission()));
+            iRedisService.setTokenWithTime(token,String.valueOf(byId.getId()),3*3600L);
+            LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
         }
@@ -100,7 +97,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         user.setStatus(1);
         user.setSex(userObjectByToken.getString("sex"));
         user.setEmail(userObjectByToken.getString("email"));
-        String permissionName = userObjectByToken.getString("permissionName");
+        String permissionName = userObjectByToken.getString("permission_name");
         if (StringUtils.isEmpty(permissionName)){
             user.setPermission(2);
         }else {
@@ -138,27 +135,12 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                     throw new CustomException("认证失败",Code.DEL_TOKEN);
                 }
             }
-            UserResult userResult = new UserResult();
-            userResult.setId(String.valueOf(user.getId()));
-            userResult.setUsername(user.getUsername());
-            userResult.setName(user.getName());
-            userResult.setPhone(user.getPhone());
-            userResult.setSex(user.getSex());
-            userResult.setStudentId(String.valueOf(user.getStudentId()));
-            userResult.setStatus(user.getStatus());
-            userResult.setCreateTime(user.getCreateTime());
-            userResult.setUpdateTime(user.getUpdateTime());
-            userResult.setPermission(user.getPermission());
-            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user.getPermission()));
-            userResult.setPermissionName(permission.getName());
-            String uuid = RandomName.getUUID();
-            String token = JWTUtil.getToken(userResult.getId(), String.valueOf(permission.getId()), uuid);
-            iRedisService.setTokenWithTime(uuid,userResult.getId(),3600L);
+            String token = JWTUtil.getToken(String.valueOf(user.getId()), String.valueOf(user.getPermission()));
+            iRedisService.setTokenWithTime(token,String.valueOf(user.getId()),3*3600L);
+            LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
         }
         return R.error("错误");
-
-
     }
 }

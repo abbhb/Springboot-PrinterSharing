@@ -34,12 +34,13 @@ public class CASOauthUtil {
         if (restTemplate==null){
             throw new CustomException("认证失败");
         }
-        String url2 = casConfig.getBaseUrl() + "oauth2/accessToken/";
+        String url2 = casConfig.getBaseUrl() + "oauth/access_token/";
         //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
         Map<String, String> map = new HashMap<>();
         map.put("code",code);
-        map.put("clientId",casConfig.getClientId());
-        map.put("clientSecret",casConfig.getClientSecret());
+        map.put("client_id",casConfig.getClientId());
+        map.put("client_secret",casConfig.getClientSecret());
+        map.put("grant_type","authorization_code");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -65,14 +66,14 @@ public class CASOauthUtil {
         if (restTemplate==null||token==null){
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        String url2 = casConfig.getBaseUrl() + "oauth2/me/?accessToken="+token.getAccessToken();
+        String url2 = casConfig.getBaseUrl() + "oauth/me/?access_token="+token.getAccessToken();
         JSONObject jsonObject = restTemplate.getForObject(url2, JSONObject.class);
         Integer code = jsonObject.getInteger("code");
         if (code!=1){
             return null;
         }
         JSONObject userJSONObject = jsonObject.getObject("data",JSONObject.class);
-        String studentId = userJSONObject.getString("studentId");
+        String studentId = userJSONObject.getString("student_id");
         String phone = userJSONObject.getString("phone");
         String permission = userJSONObject.getString("permission");
         User user = new User();
@@ -98,7 +99,7 @@ public class CASOauthUtil {
         if (restTemplate==null||token==null){
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        String url2 = casConfig.getBaseUrl() + "oauth2/me/?accessToken="+token.getAccessToken();
+        String url2 = casConfig.getBaseUrl() + "oauth/me/?access_token="+token.getAccessToken();
         JSONObject jsonObject = restTemplate.getForObject(url2, JSONObject.class);
         Integer code = jsonObject.getInteger("code");
         if (code!=1){
@@ -114,14 +115,14 @@ public class CASOauthUtil {
      * @param token
      * @return
      */
-    public Token refreshToken(RestTemplate restTemplate,Token token){
+    public Token refresh_token(RestTemplate restTemplate,Token token){
         if (restTemplate==null||token==null){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        String url2 = casConfig.getBaseUrl() + "oauth2/refreshToken/";
+        String url2 = casConfig.getBaseUrl() + "oauth/refresh_token/";
         //LinkedMultiValueMap一个键对应多个值，对应format-data的传入类型
         Map<String, String> map = new HashMap<>();
-        map.put("refreshToken",token.getRefreshToken());
+        map.put("refresh_token",token.getRefreshToken());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);

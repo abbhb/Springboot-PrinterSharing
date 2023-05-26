@@ -1,6 +1,5 @@
 package com.qc.printers.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -16,8 +15,8 @@ import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Permission;
-import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.service.IRedisService;
 
 import com.qc.printers.service.UserService;
@@ -198,18 +197,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<UserResult> loginByToken() {
+    public R<Integer> loginByToken() {
 
         User currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser==null){
-            return R.error(Code.DEL_TOKEN,"登陆过期");
+            return R.error(0,"未登录");
         }
-
-
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
-
-        UserResult UserResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(),permission.getName(),null,currentUser.getEmail(),currentUser.getAvatar());
-        return R.success(UserResult);
+//        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+//
+////        UserResult UserResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(),permission.getName(),null,currentUser.getEmail(),currentUser.getAvatar());
+//
+//        UserLoginR userLoginR = new UserLoginR();
+//        userLoginR.setToken();
+        return R.success(1);
     }
 
     @Override
@@ -390,7 +390,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user1 = (User) user;
             Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user1.getPermission()));
 
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),null,user1.getEmail(),user1.getAvatar());
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()),user1.getUsername(),user1.getName(),user1.getPhone(),user1.getSex(),String.valueOf(user1.getStudentId()),user1.getStatus(),user1.getCreateTime(),user1.getUpdateTime(),user1.getPermission(),permission.getName(),user1.getEmail(),user1.getAvatar());
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -482,6 +482,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }catch (Exception e){
             return R.error(Code.DEL_TOKEN,e.getMessage());
         }
+    }
+
+    @Override
+    public R<LoginRes> login(User user) {
+        if (StringUtils.isEmpty(user.getUsername())||StringUtils.isEmpty(user.getPassword())){
+            return R.error("参数异常");
+        }
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUsername,user.getUsername());
+        User one = super.getOne(userLambdaQueryWrapper);
+        if (one==null){
+            return R.error("用户名或密码错误");
+        }
+        if (one.getPassword()==null||one.getSalt()==null){
+            return R.error("此用户未设置密码,请使用oauth2登录");
+        }
+        String password = PWDMD5.getMD5Encryption(user.getPassword(),one.getSalt());
+        if (!one.getPassword().equals(password)){
+            return R.error("用户名或密码错误");
+        }
+        if (one.getStatus().equals(0)){
+            return R.error("账号已被禁用");
+        }
+        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()));
+        iRedisService.setTokenWithTime(token,String.valueOf(one.getId()),3*3600L);
+        LoginRes loginRes = new LoginRes();
+        loginRes.setToken(token);
+        return R.success(loginRes);
+    }
+
+    @Override
+    public R<UserResult> info() {
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            return R.error(Code.DEL_TOKEN,"请先登录");
+        }
+        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+        UserResult userResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(), permission.getName(), currentUser.getEmail(),currentUser.getAvatar());
+
+        return R.success(userResult);
     }
 
 }

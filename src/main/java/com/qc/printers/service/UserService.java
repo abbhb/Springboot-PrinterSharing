@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.vo.LoginRes;
 
 public interface UserService extends IService<User> {
 //    R<UserResult> login(String code);
@@ -16,7 +16,7 @@ public interface UserService extends IService<User> {
 
     R<UserResult> logout(String token);
 
-    R<UserResult> loginByToken();
+    R<Integer> loginByToken();
 
     R<String> updataUserStatus(String id,String status, Long userId);
 
@@ -35,4 +35,7 @@ public interface UserService extends IService<User> {
 
     R<String> emailWithUser(String emails, String code, String token);
 
+    R<LoginRes> login(User user);
+
+    R<UserResult> info();
 }
