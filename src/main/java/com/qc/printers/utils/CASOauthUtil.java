@@ -83,7 +83,7 @@ public class CASOauthUtil {
         user.setName(userJSONObject.getString("name"));
         user.setUsername(userJSONObject.getString("username"));
         if (!StringUtils.isEmpty(studentId)){
-            user.setStudentId(Long.valueOf(studentId));
+            user.setStudentId(studentId);
         }
         if (!StringUtils.isEmpty(phone)){
             user.setPhone(phone);

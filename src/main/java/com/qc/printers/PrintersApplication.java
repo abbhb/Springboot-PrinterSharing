@@ -11,6 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.Scheduled;
 import springfox.documentation.oas.annotations.EnableOpenApi;
 
 import java.util.List;
@@ -40,5 +41,7 @@ public class PrintersApplication implements CommandLineRunner {
             iRedisService.hashPut(MyString.permission_key, String.valueOf(permission.getId()),permission);
         }
     }
+
+
 
 }

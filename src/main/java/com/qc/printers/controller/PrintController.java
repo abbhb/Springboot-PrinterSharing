@@ -182,4 +182,12 @@ public class PrintController {
         
         return printerService.listPrinter(pageNum, pageSize, name, date);
     }
+
+    //获取当日打印数
+    @GetMapping("/day_print_count")
+    @ApiOperation(value = "获取当日打印数", notes = "因为没有token过不了needtoken，所以没必要再次校验token")
+    @NeedToken
+    public R<Integer> getTodayPrintCount() {
+        return printerService.getTodayPrintCount();
+    }
 }

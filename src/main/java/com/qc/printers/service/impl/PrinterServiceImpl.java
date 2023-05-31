@@ -230,4 +230,10 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         return null;
 
     }
+
+    @Override
+    public R<Integer> getTodayPrintCount() {
+        Integer todayPrintCount = printerMapper.getPrintCount();
+        return R.success(todayPrintCount);
+    }
 }

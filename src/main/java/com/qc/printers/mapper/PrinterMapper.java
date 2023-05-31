@@ -12,4 +12,6 @@ public interface PrinterMapper extends BaseMapper<Printer> {
     public List<CountTop10VO> getCountTop10();
 
     public List<CountTop10VO> getCountTop10EveryDay();
+
+    public Integer getPrintCount();
 }

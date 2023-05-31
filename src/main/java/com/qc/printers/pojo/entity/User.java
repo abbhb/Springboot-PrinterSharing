@@ -49,7 +49,7 @@ public class User implements Serializable {
 
     @ApiModelProperty(value = "学号")
     //学号
-    private Long studentId;
+    private String studentId;
 
     @ApiModelProperty(value = "状态")
     private Integer status;

@@ -33,4 +33,8 @@
                          GROUP BY
                              create_user ORDER BY total DESC) tables LIMIT 10
     </select>
+<!--    public Integer getPrintCount();-->
+    <select id="getPrintCount" resultType="java.lang.Integer">
+        SELECT count(*) FROM printer where printer.create_time BETWEEN CONCAT(CURDATE(),' 00:00:00') AND CONCAT(CURDATE(),' 23:59:59')
+    </select>
 </mapper>

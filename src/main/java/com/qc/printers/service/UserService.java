@@ -6,6 +6,7 @@ import com.qc.printers.pojo.UserResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.pojo.vo.LoginRes;
+import com.qc.printers.pojo.vo.PasswordR;
 
 public interface UserService extends IService<User> {
 //    R<UserResult> login(String code);
@@ -18,14 +19,14 @@ public interface UserService extends IService<User> {
 
     R<Integer> loginByToken();
 
-    R<String> updataUserStatus(String id,String status, Long userId);
+    R<String> updateUserStatus(String id,String status, Long userId);
 
-    R<UserResult> updataForUser(User user);
+    R<UserResult> updateForUser(User user);
 
-    R<UserResult> updataForUserSelf(User user);
+    R<UserResult> updateForUserSelf(User user);
 
 
-    R<String> updataUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
+    R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 
     R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,Long userId);
 
@@ -38,4 +39,10 @@ public interface UserService extends IService<User> {
     R<LoginRes> login(User user);
 
     R<UserResult> info();
+
+    boolean updateUserInfo(User user);
+
+    Integer userPassword();
+
+    boolean setPassword(PasswordR passwordR);
 }

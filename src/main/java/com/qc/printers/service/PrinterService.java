@@ -24,4 +24,6 @@ public interface PrinterService extends IService<Printer> {
     R<List<ValueLabelResult>> getAllUserPrinter();
 
     R<List<CountTop10VO>> getUserPrintTopList(Integer type);
+
+    R<Integer> getTodayPrintCount();
 }

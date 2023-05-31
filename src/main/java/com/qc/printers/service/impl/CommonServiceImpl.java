@@ -2,10 +2,13 @@ package com.qc.printers.service.impl;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.config.MinIoProperties;
+import com.qc.printers.mapper.LogMapper;
+import com.qc.printers.pojo.entity.Log;
 import com.qc.printers.pojo.entity.ToEmail;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.CommonService;
@@ -28,6 +31,8 @@ public class CommonServiceImpl implements CommonService {
     MinIoProperties minIoProperties;
     private final IRedisService iRedisService;
 
+    @Autowired
+    private LogMapper logMapper;
     private final UserService userService;
 //    @Autowired
 //    private JavaMailSender mailSender;
@@ -49,6 +54,14 @@ public class CommonServiceImpl implements CommonService {
             e.printStackTrace();
             throw new CustomException(e.getMessage());
         }
+    }
+
+    @Override
+    public String getImageUrl(String imageKey) {
+        if (imageKey.contains("http")){
+            return imageKey;
+        }
+        return minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+imageKey;
     }
 
     @Override
@@ -87,5 +100,20 @@ public class CommonServiceImpl implements CommonService {
 //        mailSender.send(message);
 //        iRedisService.setTokenWithTime("emailcode:"+id.asString(),verCode, 300L);
         return R.success("业务暂停");
+    }
+
+    @Override
+    public Integer countApi() {
+//      获取日志表当日请求数
+        return iRedisService.getCountApi();
+    }
+
+    @Override
+    public Integer apiCountLastday() {
+        Integer lastDayCountApi = iRedisService.getLastDayCountApi();
+        if (lastDayCountApi!=null){
+            return lastDayCountApi;
+        }
+        return 0;
     }
 }

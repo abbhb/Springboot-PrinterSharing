@@ -1,9 +1,13 @@
 package com.qc.printers.service.impl;
 
 
+import com.qc.printers.common.MyString;
 import com.qc.printers.service.IRedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -12,6 +16,20 @@ import java.util.concurrent.TimeUnit;
 public class IRedisServiceImpl implements IRedisService {
 
     private RedisTemplate redisTemplate;
+
+    //指定用redis的序列化方式进行序列化
+    @Autowired(required = false)
+    public void setRedisTemplate(RedisTemplate redisTemplate) {
+        RedisSerializer stringSerializer = new StringRedisSerializer();//序列化为String
+        //不能反序列化
+        //Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);//序列化为Json
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        redisTemplate.setKeySerializer(stringSerializer);
+        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashKeySerializer(stringSerializer);
+        redisTemplate.setHashValueSerializer(serializer);
+        this.redisTemplate = redisTemplate;
+    }
 
     @Autowired
     public IRedisServiceImpl(RedisTemplate redisTemplate){
@@ -43,6 +61,33 @@ public class IRedisServiceImpl implements IRedisService {
     }
 
     @Override
+    public void addApiCount() {
+        redisTemplate.opsForValue().increment(MyString.pre_api_count);
+    }
+
+    @Override
+    public void cleanApiCount() {
+        //每日清零
+        redisTemplate.opsForValue().set(MyString.pre_api_count_latday,redisTemplate.opsForValue().get(MyString.pre_api_count));
+        redisTemplate.opsForValue().set(MyString.pre_api_count,0);
+    }
+
+    @Override
+    public int getLastDayCountApi() {
+        Object o =  redisTemplate.opsForValue().get(MyString.pre_api_count_latday);
+        if (o == null){
+            return 0;
+        }
+        return (int)o;
+    }
+
+    @Override
+    public int getCountApi() {
+        int o = (int) redisTemplate.opsForValue().get(MyString.pre_api_count);
+        return o;
+    }
+
+    @Override
     public Long getTokenTTL(String uuid) {
         Long expire = redisTemplate.getExpire(uuid);
         return expire;
@@ -52,4 +97,6 @@ public class IRedisServiceImpl implements IRedisService {
     public String getValue(String key) {
         return (String)redisTemplate.opsForValue().get(key);
     }
+
+
 }

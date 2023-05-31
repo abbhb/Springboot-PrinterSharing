@@ -11,6 +11,7 @@ import com.qc.printers.common.R;
 import com.qc.printers.mapper.LogMapper;
 import com.qc.printers.pojo.entity.Log;
 import com.qc.printers.pojo.entity.User;
+import com.qc.printers.service.IRedisService;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,9 @@ import java.util.Map;
 public class LogAspect {
     @Autowired
     private LogMapper logDao;
+
+    @Autowired
+    private IRedisService iRedisService;
 
     /**
      * 设置操作日志切入点   在注解的位置切入代码
@@ -73,6 +77,7 @@ public class LogAspect {
 //                sysLog.setType(annotation.operType());
 //                sysLog.setDescription(annotation.operDesc());
 //            }
+            iRedisService.addApiCount();
 
             // 获取请求的类名
             String className = joinPoint.getTarget().getClass().getName();

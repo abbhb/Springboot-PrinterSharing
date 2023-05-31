@@ -13,4 +13,12 @@ public interface IRedisService {
     void hashPut(String key,String hashKey,Object object);
 
     Object getHash(String key, String hashKey);
+
+    void addApiCount();
+
+    void cleanApiCount();
+
+    int getLastDayCountApi();
+
+    int getCountApi();
 }

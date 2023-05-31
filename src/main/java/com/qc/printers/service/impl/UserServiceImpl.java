@@ -17,6 +17,8 @@ import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Permission;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.pojo.vo.LoginRes;
+import com.qc.printers.pojo.vo.PasswordR;
+import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
 
 import com.qc.printers.service.UserService;
@@ -40,6 +42,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private CASOauthUtil casOauthUtil;
 
+    @Autowired
+    private CommonService commonService;
     private final IRedisService iRedisService;
 
     @Autowired
@@ -212,8 +216,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return R.success(1);
     }
 
+    @Transactional
     @Override
-    public R<String> updataUserStatus(String id,String status, Long userId) {
+    public R<String> updateUserStatus(String id,String status, Long userId) {
         if (StringUtils.isEmpty(id)){
             return R.error("无操作对象");
         }
@@ -269,7 +274,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Transactional
     @Override
-    public R<UserResult> updataForUser(User user) {
+    public R<UserResult> updateForUser(User user) {
         if (user.getId()==null){
             return R.error("更新失败");
         }
@@ -288,7 +293,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return R.error("更新失败");
         }
 
-        if (user.getStudentId()>999999999999L){
+        if (user.getStudentId().length()>12){
             return R.error("不能超过12位学号");
         }
         if (user.getId().equals(1L)){
@@ -313,7 +318,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     @Transactional
     @Override
-    public R<UserResult> updataForUserSelf(User user) {
+    public R<UserResult> updateForUserSelf(User user) {
         if (user.getId()==null){
             return R.error("更新失败");
         }
@@ -331,7 +336,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user.getPhone()==null){
             return R.error("更新失败");
         }
-        if (user.getStudentId()>999999999999L){
+        if (user.getStudentId().length()>12){
             return R.error("不能超过12位学号");
         }
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -352,7 +357,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<String> updataUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token) {
+    public R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token) {
         return null;
     }
 
@@ -519,9 +524,86 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return R.error(Code.DEL_TOKEN,"请先登录");
         }
         Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
-        UserResult userResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(), permission.getName(), currentUser.getEmail(),currentUser.getAvatar());
+        String avatar = currentUser.getAvatar();
+        if (!avatar.contains("http")){
+            String imageUrl = commonService.getImageUrl(avatar);
+            avatar = imageUrl;
+        }
+        UserResult userResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(), permission.getName(), currentUser.getEmail(),avatar);
 
         return R.success(userResult);
+    }
+
+    @Transactional
+    @Override
+    public boolean updateUserInfo(User user) {
+        log.info("user={}",user);
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            return false;
+        }
+        if (StringUtils.isEmpty(user.getPhone())||StringUtils.isEmpty(user.getSex())||StringUtils.isEmpty(user.getStudentId())){
+            throw new CustomException("请输入完整!");
+        }
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId,currentUser.getId());
+        lambdaUpdateWrapper.set(User::getName,user.getName());
+        lambdaUpdateWrapper.set(User::getPhone,user.getPhone());
+        //判空
+        if (!StringUtils.isEmpty(user.getAvatar())){
+            lambdaUpdateWrapper.set(User::getAvatar,user.getAvatar());
+            if (user.getAvatar().contains("http")){
+                lambdaUpdateWrapper.set(User::getAvatar,user.getAvatar().split("aistudio/")[1]);
+            }
+        }
+        lambdaUpdateWrapper.set(User::getSex,user.getSex());
+        lambdaUpdateWrapper.set(User::getStudentId,user.getStudentId());
+        boolean update = this.update(lambdaUpdateWrapper);
+        return update;
+    }
+
+    @Override
+    public Integer userPassword() {
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        log.info("cu={}",currentUser);
+        if (StringUtils.isEmpty(currentUser.getPassword())&&StringUtils.isEmpty(currentUser.getSalt())){
+            return 1;
+        }
+        return 0;
+    }
+
+    @Transactional
+    @Override
+    public boolean setPassword(PasswordR passwordR) {
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser==null){
+            throw new CustomException("登录失效!",Code.DEL_TOKEN);
+        }
+        if (StringUtils.isNotEmpty(currentUser.getPassword())||StringUtils.isNotEmpty(currentUser.getSalt())){
+            if (StringUtils.isEmpty(passwordR.getPassword())){
+                throw new CustomException("请输入原密码!");
+            }
+            String salt = currentUser.getSalt();
+            String password = currentUser.getPassword();
+            String md5Encryption = PWDMD5.getMD5Encryption(passwordR.getPassword(), salt);
+            if (!md5Encryption.equals(password)){
+                throw new CustomException("原密码错误!");
+            }
+        }
+        if (StringUtils.isEmpty(passwordR.getNewPassword())||StringUtils.isEmpty(passwordR.getRePassword())){
+            throw new CustomException("请保证新密码和确认密码不为空!");
+        }
+        if (!passwordR.getNewPassword().equals(passwordR.getRePassword())){
+            throw new CustomException("请保证新密码和确认密码一致!");
+        }
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.eq(User::getId,currentUser.getId());
+        String salt = PWDMD5.getSalt();
+        String md5Encryptions = PWDMD5.getMD5Encryption(passwordR.getNewPassword(), salt);
+        userLambdaUpdateWrapper.set(User::getPassword,md5Encryptions);
+        userLambdaUpdateWrapper.set(User::getSalt,salt);
+        boolean update = this.update(userLambdaUpdateWrapper);
+        return update;
     }
 
 }
