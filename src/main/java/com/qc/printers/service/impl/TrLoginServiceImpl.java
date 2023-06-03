@@ -67,20 +67,6 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
             if (byId==null){
                 throw new CustomException("认证失败",Code.DEL_TOKEN);
             }
-//            UserResult userResult = new UserResult();
-//            userResult.setId(String.valueOf(byId.getId()));
-//            userResult.setUsername(byId.getUsername());
-//            userResult.setName(byId.getName());
-//            userResult.setPhone(byId.getPhone());
-//            userResult.setSex(byId.getSex());
-//            userResult.setStudentId(String.valueOf(byId.getStudentId()));
-//            userResult.setStatus(byId.getStatus());
-//            userResult.setCreateTime(byId.getCreateTime());
-//            userResult.setUpdateTime(byId.getUpdateTime());
-//            userResult.setPermission(byId.getPermission());
-//            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(byId.getPermission()));
-//
-//            userResult.setPermissionName(permission.getName());
             String token = JWTUtil.getToken(String.valueOf(byId.getId()), String.valueOf(byId.getPermission()));
             iRedisService.setTokenWithTime(token,String.valueOf(byId.getId()),3*3600L);
             LoginRes userResult = new LoginRes();
@@ -92,8 +78,22 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         //正常是不会出现用户名重复的情况的
         user.setUsername(userObjectByToken.getString("username"));
         user.setName(userObjectByToken.getString("name"));
-        user.setPhone(userObjectByToken.getString("phone"));
-        user.setAvatar(userObjectByToken.getString("avatar"));
+        String avatar = null;
+        String phone;
+        try{
+            String string = userObjectByToken.getString("avatar");
+            avatar = string;
+        }catch (Exception e){
+            avatar = null;
+        }
+        try {
+            phone = userObjectByToken.getString("phone");
+        }catch (Exception e){
+            phone = null;
+        }
+        user.setPhone(phone);
+
+        user.setAvatar(avatar);
         user.setStatus(1);
         user.setSex(userObjectByToken.getString("sex"));
         user.setEmail(userObjectByToken.getString("email"));

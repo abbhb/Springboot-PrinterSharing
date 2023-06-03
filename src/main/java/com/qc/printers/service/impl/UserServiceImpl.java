@@ -186,22 +186,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<UserResult> logout(String token) {
+    public R<String> logout(String token) {
         if (StringUtils.isEmpty(token)) {
             return R.error(Code.DEL_TOKEN,"登陆过期");
         }
-        try {
-            DecodedJWT decodedJWT = JWTUtil.deToken(token);
-            Claim uuid = decodedJWT.getClaim("uuid");
-            iRedisService.del(uuid.asString());
-            return R.successOnlyMsg("下线成功",Code.DEL_TOKEN);
-        }catch (Exception e){
-            return R.error(Code.DEL_TOKEN,"登陆过期");
-        }
+        iRedisService.del(token);
+        return R.successOnlyMsg("下线成功",Code.DEL_TOKEN);
     }
 
     @Override
-    public R<Integer> loginByToken() {
+    public R<LoginRes> loginByToken() {
 
         User currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser==null){
@@ -213,7 +207,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 //
 //        UserLoginR userLoginR = new UserLoginR();
 //        userLoginR.setToken();
-        return R.success(1);
+        return R.success(null);
     }
 
     @Transactional
@@ -525,10 +519,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
         String avatar = currentUser.getAvatar();
-        if (!avatar.contains("http")){
-            String imageUrl = commonService.getImageUrl(avatar);
-            avatar = imageUrl;
+        if (StringUtils.isNotEmpty(avatar)){
+            if (!avatar.contains("http")){
+                String imageUrl = commonService.getImageUrl(avatar);
+                avatar = imageUrl;
+            }
+        }else {
+            avatar = "";
         }
+
         UserResult userResult = new UserResult(String.valueOf(currentUser.getId()),currentUser.getUsername(),currentUser.getName(),currentUser.getPhone(),currentUser.getSex(),String.valueOf(currentUser.getStudentId()),currentUser.getStatus(),currentUser.getCreateTime(),currentUser.getUpdateTime(),currentUser.getPermission(), permission.getName(), currentUser.getEmail(),avatar);
 
         return R.success(userResult);

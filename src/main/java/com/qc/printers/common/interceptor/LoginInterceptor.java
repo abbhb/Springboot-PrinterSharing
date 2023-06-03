@@ -69,7 +69,6 @@ public class LoginInterceptor implements HandlerInterceptor {
             //没有JWTtoken
             throw new CustomException("请先登录!",Code.DEL_TOKEN);
         }
-        DecodedJWT decodedJWT = JWTUtil.deToken(token);
         log.info("### 解析token= {}", token);
         String userId = iRedisService.getValue(token);
         if (StringUtils.isEmpty(userId)){

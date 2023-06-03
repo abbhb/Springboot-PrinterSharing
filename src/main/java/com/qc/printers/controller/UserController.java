@@ -1,5 +1,7 @@
 package com.qc.printers.controller;
 
+import com.qc.printers.common.Code;
+import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.pojo.UserResult;
@@ -9,12 +11,14 @@ import com.qc.printers.pojo.vo.PasswordR;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
+import com.qc.printers.utils.JWTUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
@@ -71,11 +75,11 @@ public class UserController {
     }
 
     @NeedToken
-    @PostMapping("/loginbytoken")
+    @PostMapping("/login_by_token")
     @ApiOperation(value = "token校验",notes = "没过期就data返回1告诉前端一声")
-    public R<Integer> loginByToken(){
-        R<Integer> userResultR = userService.loginByToken();
-        return userResultR;
+    public R<LoginRes> loginByToken(){
+
+        return userService.loginByToken();
     }
 
     @NeedToken
@@ -104,6 +108,21 @@ public class UserController {
     public R<UserResult> info(){
         log.info("获取用户信息");
         return userService.info();
+    }
+
+    @PostMapping("/logout")
+    @ApiOperation(value = "退出登录",notes = "")
+    public R<String> logout(HttpServletRequest request){
+        log.info("退出登录");
+        final String authHeader = request.getHeader(JWTUtil.AUTH_HEADER_KEY);
+        log.info("## authHeader= {}", authHeader);
+        if (StringUtils.isBlank(authHeader) || !authHeader.startsWith(JWTUtil.TOKEN_PREFIX)) {
+            log.info("### 用户未登录，请先登录 ###");
+            throw new CustomException("请先登录!", Code.DEL_TOKEN);
+        }
+        // 获取token
+        final String token = authHeader.substring(7);
+        return userService.logout(token);
     }
 
     @GetMapping("/user_count")

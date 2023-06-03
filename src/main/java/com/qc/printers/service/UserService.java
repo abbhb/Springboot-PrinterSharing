@@ -15,9 +15,9 @@ public interface UserService extends IService<User> {
 
     R<String> createUser(User user,Long userId);
 
-    R<UserResult> logout(String token);
+    R<String> logout(String token);
 
-    R<Integer> loginByToken();
+    R<LoginRes> loginByToken();
 
     R<String> updateUserStatus(String id,String status, Long userId);
 
