@@ -49,7 +49,7 @@ public class CommonServiceImpl implements CommonService {
             log.info("imageUrl={}",fileUrl);
             String[] split = fileUrl.split("\\?");
 
-            return R.successOnlyObject(split[0]);
+            return R.successOnlyObject(split[0].split("/aistudio/")[1]);
         }catch (Exception e){
             e.printStackTrace();
             throw new CustomException(e.getMessage());

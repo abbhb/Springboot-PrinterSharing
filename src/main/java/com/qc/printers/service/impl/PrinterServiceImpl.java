@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
+import com.qc.printers.config.MinIoProperties;
 import com.qc.printers.mapper.PrinterMapper;
 import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.PrinterResult;
@@ -15,22 +16,26 @@ import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.pojo.vo.CountTop10VO;
+import com.qc.printers.service.CommonService;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.FileMD5;
 import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.utils.ParamsCalibration;
 import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,15 +43,19 @@ import java.util.List;
 @Slf4j
 public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> implements PrinterService {
 
-    private final UserService userService;
+    private final CommonService commonService;
+    @Autowired
+    private UserService userService;
 
     private final UserMapper userMapper;
 
+    @Autowired
+    private MinIoProperties minIoProperties;
     private final PrinterMapper printerMapper;
 
     @Autowired
-    public PrinterServiceImpl(UserService userService, UserMapper userMapper, PrinterMapper printerMapper) {
-        this.userService = userService;
+    public PrinterServiceImpl(CommonService commonService, UserMapper userMapper, PrinterMapper printerMapper) {
+        this.commonService = commonService;
         this.userMapper = userMapper;
         this.printerMapper = printerMapper;
     }
@@ -117,12 +126,16 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
-            printerResult.setUrl(printerItem1.getUrl());
+            printerResult.setUrl(minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+printerItem1.getUrl());
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
+            printerResult.setNeedPrintPagesIndex(printerItem1.getNeedPrintPagesIndex());
+            User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
+            printerResult.setCreateUser(currentUser.getName());
             printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
             printerResult.setId(String.valueOf(printerItem1.getId()));
             printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
+
             results.add(printerResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -167,9 +180,10 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
+            printerResult.setNeedPrintPagesIndex(printerItem1.getNeedPrintPagesIndex());
             printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
             printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
-            printerResult.setUrl(printerItem1.getUrl());
+            printerResult.setUrl(minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+printerItem1.getUrl());
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){
                 printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())+"(用户信息已丢失)");
@@ -235,5 +249,39 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
     public R<Integer> getTodayPrintCount() {
         Integer todayPrintCount = printerMapper.getPrintCount();
         return R.success(todayPrintCount);
+    }
+
+    @Override
+    public R<Integer> addPrinterLog(MultipartFile file, Integer pageStart, Integer pageEnd, Integer copiesNum,String username,Integer duplex,String fileName) {
+        String originName = file.getOriginalFilename();
+        if (originName.contains("\\?") || originName.contains("？")) {
+            return R.error("文件名里不允许包含？请修改后在打印");
+        }
+        boolean isDuplex = !duplex.equals(1);
+        User one = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+        if (one==null){
+            throw new CustomException("用户不存在");
+        }
+        // 先在minio上传一份原始文件,若打印失败可以调用其余方式
+        String fileURL = commonService.uploadFileTOMinio(file).getData();
+        if (StringUtils.isEmpty(fileURL)) {
+            return R.error("文件上传失败");
+        }
+        // 保存打印记录
+        Printer printer = new Printer();
+        printer.setCreateTime(LocalDateTime.now());
+        printer.setCreateUser(one.getId());
+        printer.setUrl(fileURL);
+        printer.setIsDuplex(isDuplex?1:0);
+        printer.setCopies(copiesNum);
+        printer.setNeedPrintPagesEndIndex(pageEnd);
+        printer.setNeedPrintPagesIndex(pageStart);
+        printer.setName(fileName);
+        printer.setSingleDocumentPaperUsage((isDuplex?(int)Math.ceil((double)(pageEnd-pageStart+1)/2.0):(pageEnd-pageStart+1)));
+        boolean save = this.save(printer);
+        if (!save){
+            throw new CustomException("保存失败");
+        }
+        return R.success(1);
     }
 }

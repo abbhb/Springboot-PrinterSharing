@@ -42,6 +42,8 @@ public class PrinterResult implements Serializable {
      */
     private Integer needPrintPagesEndIndex;
 
+    private Integer needPrintPagesIndex;
+
     private Integer originFilePages;
 
     private String contentHash;
@@ -57,5 +59,7 @@ public class PrinterResult implements Serializable {
     private Integer isDuplex;
 
     private String url;
+
+
 
 }

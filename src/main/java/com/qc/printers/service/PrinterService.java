@@ -7,6 +7,7 @@ import com.qc.printers.pojo.ValueLabelResult;
 import com.qc.printers.pojo.entity.PageData;
 import com.qc.printers.pojo.entity.Printer;
 import com.qc.printers.pojo.vo.CountTop10VO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,4 +27,6 @@ public interface PrinterService extends IService<Printer> {
     R<List<CountTop10VO>> getUserPrintTopList(Integer type);
 
     R<Integer> getTodayPrintCount();
+
+    R<Integer> addPrinterLog(MultipartFile file, Integer pageStart, Integer pageEnd, Integer copiesNum,String username,Integer duplex,String fileName);
 }

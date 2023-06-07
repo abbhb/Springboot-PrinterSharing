@@ -38,10 +38,11 @@ public class Printer implements Serializable {
     private Integer printBigValue;
 
     /**
-     * 需要打印的最后一页：起始页必定为1
      * todo 类型改为integer, -1代表all, 其他代表页码截至号, 变量名改为needPrintPagesEndIndex
      */
     private Integer needPrintPagesEndIndex;
+
+    private Integer needPrintPagesIndex;
 
 
     /**

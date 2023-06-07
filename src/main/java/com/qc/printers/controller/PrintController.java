@@ -28,6 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.websocket.server.PathParam;
 import java.util.List;
 
+import static com.qc.printers.utils.ParamsCalibration.somePrinterParams;
+
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/printer")
 @Slf4j
@@ -114,6 +116,15 @@ public class PrintController {
         }
         return R.error("打印失败");
     }
+
+    @CrossOrigin("*")
+    @PostMapping("/add_print_log")
+    @ApiOperation(value = "打印通用接口")
+    public R<Integer> addPrintLog(MultipartFile file, @RequestParam(value = "file_name") String fileName, @RequestParam(value = "duplex") String duplex,@RequestParam(value = "page_start") String pageStart, @RequestParam(value = "page_end") String pageEnd, @RequestParam(value = "copies_num") String copiesNum,@RequestParam(value = "username") String username) {
+
+        log.info("pageStart={},pageEnd={},copiesNum={},username={},duplex={}", pageStart, pageEnd, copiesNum,username,duplex);
+        return printerService.addPrinterLog(file, Integer.valueOf(pageStart), Integer.valueOf(pageEnd), Integer.valueOf(copiesNum),username,Integer.valueOf(duplex),fileName);
+    }
     
     
     /**
@@ -133,7 +144,7 @@ public class PrintController {
     @NeedToken
     @PermissionCheck("1")
     @ApiOperation(value = "获取历史打印记录", notes = "所有人历史记录：需要有管理员权限")
-    public R<PageData<PrinterResult>> getAllHistoryPrints(Integer pageNum, Integer pageSize, String name, String date, String user) {
+    public R<PageData<PrinterResult>> getAllHistoryPrints(@RequestParam("page_num") Integer pageNum,@RequestParam("page_size") Integer pageSize, String name, String date, String user) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -172,7 +183,7 @@ public class PrintController {
     @GetMapping("/getMyHistoryPrints")
     @ApiOperation(value = "获取本人历史打印记录", notes = "因为没有token过不了needtoken，所以没必要再次校验token")
     @NeedToken
-    public R<PageData<PrinterResult>> getMyHistoryPrints(Integer pageNum, Integer pageSize, String name, String date) {
+    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestParam("page_num") Integer pageNum,@RequestParam("page_size") Integer pageSize,String name, String date) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
